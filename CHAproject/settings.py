@@ -20,7 +20,12 @@ SECRET_KEY = os.getenv("SECRET_KEY", "dummy-development-secret")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(",")
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    os.getenv('RENDER_EXTERNAL_HOSTNAME'),  # Render に合わせる
+    '.onrender.com',  # ワイルドカードで Render のドメインを許可
+]
 
 
 # Application definition
