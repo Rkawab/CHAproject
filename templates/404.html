@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">404 - ページが見つかりません</h2>
+<p>お探しのページは存在しないか、移動された可能性があります。</p>
+<br>
+<a href="{% url 'core:home' %}" class="btn btn-outline-primary mb-2">ホーム</a>
+
+{% endblock content %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+{% if messages %}
+    {% for message in messages %}
+        <div>{{ message.message }}: {{ message.tags}}</div>
+        <!--ユーザーを有効化しました：success と表示される-->
+    {% endfor %}
+{% endif %}
+<form method="POST">
+    {% csrf_token %}
+    {% include "includes/bootstrap_form.html" with form=activate_form %}
+    <input type="submit" value="ユーザーを有効化する" class="btn btn-primary">
+</form><br>
+{% endblock %}

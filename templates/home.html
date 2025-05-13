@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">家計簿アプリへようこそ</h2>
+
+<!-- 合計金額の表示 -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <h5 class="card-title">今月の出費合計</h5>
+        <p class="card-text fs-4 fw-bold text-primary">{{ total_amount }} 円</p>
+    </div>
+</div>
+
+<!-- 費目ごとの合計表示 -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h5 class="card-title mb-3">費目ごとの合計</h5>
+        {% if cost_item_totals %}
+        <ul class="list-group">
+            {% for item in cost_item_totals %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ item.cost_item__name }}
+                <span class="badge bg-secondary rounded-pill">{{ item.total }} 円</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">今月の出費データはありません。</p>
+        {% endif %}
+    </div>
+</div>
+<br>
+<a href="{% url 'household:regist' %}" class="btn btn-outline-primary mb-2">新規追加</a>
+
+{% endblock content %}

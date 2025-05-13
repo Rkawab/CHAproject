@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block content %}
+{% if messages %}
+    {% for message in messages %}
+        <p>{{ message.message }}</p>
+    {% endfor %}
+{% endif %}
+
+<h2>ユーザー情報の編集</h2>
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% include "includes/bootstrap_form.html" with form=user_edit_form %}
+    <input type="submit" value="更新" class="btn btn-primary">
+</form><br>
+
+<a href="{% url 'accounts:change_password' %}" class="btn btn-outline-danger">パスワード変更</a>
+
+{% endblock %}

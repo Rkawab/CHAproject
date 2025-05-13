@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>ユーザー登録</h2>
+<form method="POST">
+  {% csrf_token %}
+  {% include "includes/bootstrap_form.html" with form=regist_form %}
+  <button type="submit" class="btn btn-primary">登録</button>
+</form>
+{% endblock %}

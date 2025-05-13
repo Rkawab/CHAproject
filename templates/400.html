@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">400 - リクエストエラー</h2>
+<p>プログラム上で何かしらの問題があります。</p>
+<p>このエラーが出たら、おしえてね！</p>
+<br>
+<a href="{% url 'core:home' %}" class="btn btn-outline-primary mb-2">ホーム</a>
+
+{% endblock content %}

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">500 - サーバーエラー</h2>
+<p>サーバー内部で問題が発生しました。後ほど再試行してください。</p>
+<p>無料のサーバーを使わせてもらっているからこのエラーよく出るよ！</p>
+<p>根気よくアクセスし続けたら、すぐ回復するよ！！</p>
+<br>
+<a href="{% url 'core:home' %}" class="btn btn-outline-primary mb-2">ホーム</a>
+
+{% endblock content %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block content %}
+
+<h2 class="mb-4">家計簿一覧（{{ year }}年{{ month }}月）</h2>
+
+<!-- 月移動ナビ -->
+<div class="mb-3 d-flex justify-content-between">
+  <a href="{% url 'household:list_by_month' prev_month.year prev_month.month %}" class="btn btn-outline-secondary">← 前月</a>
+
+  {% if next_month %}
+    <a href="{% url 'household:list_by_month' next_month.year next_month.month %}" class="btn btn-outline-secondary">翌月 →</a>
+  {% else %}
+    <button class="btn btn-outline-secondary" disabled>翌月 →</button>
+  {% endif %}
+</div>
+
+<a href="{% url 'household:regist' %}" class="btn btn-outline-primary mb-2">新規追加</a>
+
+<!-- 合計金額の表示 -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <h5 class="card-title">この月の出費合計</h5>
+        <p class="card-text fs-4 fw-bold text-primary">{{ total_amount }} 円</p>
+    </div>
+</div>
+
+<!-- 費目ごとの合計表示 -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">費目ごとの合計</h5>
+        {% if cost_item_totals %}
+        <ul class="list-group">
+            {% for item in cost_item_totals %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ item.cost_item__name }}
+                <span class="badge bg-secondary rounded-pill">{{ item.total }} 円</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">この月の出費データはありません。</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+    <thead class="table-light text-center">
+        <tr>
+        <th scope="col" class="text-center">日付</th>
+        <th scope="col" class="text-center">費目</th>
+        <th scope="col" class="text-center">金額</th>
+        <th scope="col" class="text-center">名称</th>
+        <th scope="col" class="text-center">カード</th>
+        <th scope="col" class="text-center">立替者</th>
+        <th scope="col" class="text-center">操作</th>
+        </tr>
+    </thead>
+    <tbody class="text-center">
+        {% for entry in entries %}
+        <tr>
+            <td>{{ entry.purchase_date }}</td>
+            <td>{{ entry.cost_item.name }}</td>
+            <td class="text-end">\{{ entry.amount|intcomma }}</td>
+            <td>{{ entry.description }}</td>
+            <td>{{ entry.used_shared_card|yesno:"✔,✘" }}</td>
+            <td>{{ entry.payer.name|default:"-" }}</td>
+            <td>
+                <a href="{% url 'household:edit' entry.pk %}" class="btn btn-sm btn-outline-primary">編集</a>
+                <a href="{% url 'household:delete' entry.pk %}" class="btn btn-sm btn-outline-danger">削除</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-muted">データがありません。</td></tr>
+        {% endfor %}
+    </tbody>
+    </table>
+</div>
+
+{% endblock %}

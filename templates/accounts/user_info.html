@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-3">ユーザー情報</h2>
+<ul class="list-group mb-4">
+    <li class="list-group-item"><strong>名前:</strong> {{ request.user.username }}</li>
+    <li class="list-group-item"><strong>メールアドレス:</strong> {{ request.user.email }}</li>
+</ul>
+
+<a href="{% url 'accounts:regist' %}" class="btn btn-outline-primary mb-2">新規ユーザー登録</a><br>
+<a href="{% url 'accounts:edit' %}" class="btn btn-outline-secondary mb-2">ユーザー情報変更</a><br>
+<a href="{% url 'accounts:change_password' %}" class="btn btn-outline-danger">パスワード変更</a>
+{% endblock %}

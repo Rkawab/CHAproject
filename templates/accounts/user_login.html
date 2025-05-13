@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block  content %}
+{% if messages %}
+    {% for message in messages %}
+        <p>{{ message.message }}</p>
+    {% endfor %}
+{% endif %}
+<h2>ログイン</h2>
+<form method="POST">
+    {% csrf_token %}
+    {% include "includes/bootstrap_form.html" with form=login_form %}
+    <input type="submit" value="ログイン" class="btn btn-primary">
+</form><br>
+{% endblock %}

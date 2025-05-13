@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">403 - アクセス拒否</h2>
+<p>このページにアクセスする権限がありません。</p>
+<br>
+<a href="{% url 'core:home' %}" class="btn btn-outline-primary mb-2">ホーム</a>
+
+{% endblock content %}

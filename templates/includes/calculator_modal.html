@@ -1,0 +1,74 @@
+<!-- 電卓モーダル -->
+<div class="modal" tabindex="-1" id="calculatorModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">電卓</h5>
+        <button type="button" class="btn-close" onclick="closeCalculator()"></button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="calcDisplay" class="form-control mb-2" readonly>
+        <div class="d-grid gap-1">
+            <div class="btn-group" role="group">
+                <button class="btn btn-secondary" onclick="appendCalc('7')">7</button>
+                <button class="btn btn-secondary" onclick="appendCalc('8')">8</button>
+                <button class="btn btn-secondary" onclick="appendCalc('9')">9</button>
+                <button class="btn btn-warning" onclick="appendCalc('/')">÷</button>
+            </div>
+            <div class="btn-group" role="group">
+                <button class="btn btn-secondary" onclick="appendCalc('4')">4</button>
+                <button class="btn btn-secondary" onclick="appendCalc('5')">5</button>
+                <button class="btn btn-secondary" onclick="appendCalc('6')">6</button>
+                <button class="btn btn-warning" onclick="appendCalc('*')">×</button>
+            </div>
+            <div class="btn-group" role="group">
+                <button class="btn btn-secondary" onclick="appendCalc('1')">1</button>
+                <button class="btn btn-secondary" onclick="appendCalc('2')">2</button>
+                <button class="btn btn-secondary" onclick="appendCalc('3')">3</button>
+                <button class="btn btn-warning" onclick="appendCalc('-')">−</button>
+            </div>
+            <div class="btn-group" role="group">
+                <button class="btn btn-secondary" onclick="appendCalc('0')">0</button>
+                <button class="btn btn-danger" onclick="clearCalc()">C</button>
+                <button class="btn btn-success" onclick="calculate()">=</button>
+                <button class="btn btn-warning" onclick="appendCalc('+')">＋</button>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let calcExpression = '';
+
+function openCalculator() {
+    calcExpression = '';
+    document.getElementById('calcDisplay').value = '';
+    new bootstrap.Modal(document.getElementById('calculatorModal')).show();
+}
+
+function closeCalculator() {
+    bootstrap.Modal.getInstance(document.getElementById('calculatorModal')).hide();
+}
+
+function appendCalc(val) {
+    calcExpression += val;
+    document.getElementById('calcDisplay').value = calcExpression;
+}
+
+function clearCalc() {
+    calcExpression = '';
+    document.getElementById('calcDisplay').value = '';
+}
+
+function calculate() {
+    try {
+        const result = eval(calcExpression);
+        document.querySelector('input[name="amount"]').value = Math.floor(result);
+        closeCalculator();
+    } catch (e) {
+        alert('計算式が正しくありません');
+    }
+}
+</script>
