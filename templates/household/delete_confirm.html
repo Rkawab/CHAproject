@@ -14,7 +14,7 @@
 
 <form method="post">
     {% csrf_token %}
-    <button type="submit" class="btn btn-danger">削除する</button>
-    <a href="{% url 'household:list' %}" class="btn btn-secondary">キャンセル</a>
+    <button type="submit" class="btn btn-outline-danger">削除する</button>
+    <a href="{% url 'household:list' %}" class="btn btn-outline-secondary">キャンセル</a>
 </form>
 {% endblock %}

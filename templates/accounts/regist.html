@@ -4,6 +4,6 @@
 <form method="POST">
   {% csrf_token %}
   {% include "includes/bootstrap_form.html" with form=regist_form %}
-  <button type="submit" class="btn btn-primary">登録</button>
+  <button type="submit" class="btn btn-outline-primary mb-2">登録</button>
 </form>
 {% endblock %}

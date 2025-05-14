@@ -9,6 +9,6 @@
 <form method="POST">
     {% csrf_token %}
     {% include "includes/bootstrap_form.html" with form=login_form %}
-    <input type="submit" value="ログイン" class="btn btn-primary">
+    <input type="submit" value="ログイン" class="btn btn-outline-primary mb-2">
 </form><br>
 {% endblock %}

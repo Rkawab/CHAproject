@@ -2,59 +2,64 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="ja">
-    <head>
-        <meta charset="utf-8">
-        <!-- BootstrapのCSSを読み込む（ページ全体に適用可能） -->
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" 
-              integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" 
-              crossorigin="anonymous">
-        <!-- 独自のCSSを読み込む -->
-        <link href="{% static 'css/custom.css' %}" rel="stylesheet">
-    </head>
-    <body>
-        <!-- ナビゲーションバーの定義 -->
-        <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-            <div class="container">
-                <!-- DjangoのURLパターンを利用してホームリンクを生成 -->
-                <a class="navbar-brand fw-bold" href="{% url 'core:home' %}">ホーム</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
-                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
-                        {% if user.is_authenticated %}  <!--認証されている場合の表示内容-->
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="{% url 'household:list' %}">家計簿</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="{% url 'accounts:info' %}">ユーザー情報</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="{% url 'accounts:logout' %}">ログアウト</a>
-                            </li>
-                        {% else %}
-                            <!-- 認証されていなかったら、ユーザー登録へのリンクを表示(ユーザー登録を自由にできないように設定) -->
-                            <!--<li class="nav-item">-->
-                                <!--<a class="nav-link text-white" href="{% url 'accounts:regist' %}">ユーザー登録</a>-->
-                            <!--</li>-->
-                        {% endif %}
-                    </ul>
-                </div>
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}家計簿アプリ{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- ナビバー -->
+    <nav class="navbar navbar-expand-md navbar-dark bg-primary shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="{% url 'core:home' %}">ホーム</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}  <!--認証されている場合の表示内容-->
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="{% url 'household:list' %}">家計簿</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="{% url 'accounts:info' %}">ユーザー情報</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="{% url 'accounts:logout' %}">ログアウト</a>
+                        </li>
+                    {% else %}
+                        <!-- 認証されていなかったら、ユーザー登録へのリンクを表示(ユーザー登録を自由にできないように設定) -->
+                        <!--<li class="nav-item">-->
+                            <!--<a class="nav-link text-white" href="{% url 'accounts:regist' %}">ユーザー登録</a>-->
+                        <!--</li>-->
+                    {% endif %}
+                </ul>
             </div>
-        </nav>
-
-
-        <!-- コンテンツを含むコンテナ -->
-        <div class="container">
-            {% block content %} 
-            <!-- 各テンプレートでこのブロックを上書きしてページ内容を追加 -->
-            {% endblock content %}
         </div>
+    </nav>
 
-        <!-- BootstrapのJavaScriptを読み込む（ページ全体で動的機能を提供） -->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" 
-                integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" 
-                crossorigin="anonymous"></script>
-    </body>
+    <!-- メインコンテンツ -->
+    <main class="container">
+        {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
 </html>
