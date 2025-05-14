@@ -12,7 +12,7 @@
 </div>
 
 <!-- 費目ごとの合計表示 -->
-<div class="card shadow-sm">
+<div class="card mb-4 shadow-sm">
     <div class="card-body">
         <h5 class="card-title mb-3">費目ごとの合計</h5>
         {% if cost_item_totals %}
@@ -29,7 +29,27 @@
         {% endif %}
     </div>
 </div>
-<br>
+
+<!-- 立替者ごとの合計 -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <h5 class="card-title mb-3">立替者ごとの合計</h5>
+        {% if payer_totals %}
+        <ul class="list-group">
+            {% for payer in payer_totals %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ payer.payer__name }}
+                <span class="badge bg-info rounded-pill">{{ payer.total }} 円</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">立替データはありません。</p>
+        {% endif %}
+    </div>
+</div>
+
+
 <a href="{% url 'household:regist' %}" class="btn btn-outline-primary mb-2">新規追加</a>
 
 {% endblock content %}

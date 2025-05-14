@@ -11,7 +11,7 @@ from datetime import datetime
 def home(request):
     today = now()
     first_day = today.replace(day=1)
-    
+
     # 今月の出費（購入日が今月のデータ）
     monthly_entries = HouseholdAccount.objects.filter(purchase_date__gte=first_day, purchase_date__lte=today)
 
@@ -20,8 +20,16 @@ def home(request):
 
     # 費目ごとの合計
     cost_item_totals = monthly_entries.values('cost_item__name').annotate(total=Sum('amount'))
+
+    # 立替者ごとの合計
+    payer_totals = monthly_entries.filter(payer__isnull=False)\
+        .values('payer__name')\
+        .annotate(total=Sum('amount'))\
+        .order_by('payer__name')
+
     return render(request, 'home.html', {
         'total_amount': total_amount,
         'cost_item_totals': cost_item_totals,
+        'payer_totals': payer_totals,  # ← 追加
     })
         # render(リクエスト情報, 表示するテンプレート, {HTMLで使用するデータ})
