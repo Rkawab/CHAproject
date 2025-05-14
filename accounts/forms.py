@@ -48,8 +48,10 @@ class RegistForm(forms.ModelForm):
     def save(self, commit=False):
         user = super().save(commit=False)   # このメソッドが完了するまではまだデータベースへの保存はしない
         user.set_password(self.cleaned_data['password'])
+        user.is_active = False  # ← ここを追加
         if commit:
             user.save() # .save(commit=True)で呼び出されたら、通常通り保存
+        return user
 
 # ユーザー本登録のためのフォーム
 class UserActivateForm(forms.Form):

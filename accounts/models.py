@@ -73,6 +73,6 @@ class UserActivateToken(models.Model):
 
 @receiver(post_save, sender=User)   # デコレーター (Userモデルが 保存（post_save）されたあとに自動的に呼ばれる処理)
 def publish_token(sender, instance, created, **kwargs): # これらの引数はDjangoが自動で引数を関数に渡す
-    user_activate_token = UserActivateToken.objects.create_or_update_token(instance)
-    #print(f'http://127.0.0.1:8000/accounts/activate_user/{user_activate_token.token}')
-    send_activation_email(instance, user_activate_token.token)  # ← メール送信に置き換え
+    if created:  # ← ユーザーが新規作成されたときだけ
+        user_activate_token = UserActivateToken.objects.create_or_update_token(instance)
+        send_activation_email(instance, user_activate_token.token)  # ← メール送信に置き換え
