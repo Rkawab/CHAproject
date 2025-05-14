@@ -6,6 +6,8 @@ from django.contrib.auth.decorators import login_required
 from .models import HouseholdAccount
 from .forms import HouseholdAccountForm
 from django.db.models import Sum
+from django.contrib import messages
+from django.views.decorators.http import require_POST
 
 
 @login_required
@@ -88,3 +90,10 @@ def household_delete(request, pk):
     return render(request, 'household/delete_confirm.html', {
         'entry': entry
     })
+
+@login_required
+@require_POST
+def clear_payer(request, payer_name):
+    updated_count = HouseholdAccount.objects.filter(payer__name=payer_name).update(payer=None)
+    messages.success(request, f"{payer_name} さんの立替データ（{updated_count}件）をクリアしました。")
+    return redirect('core:home')

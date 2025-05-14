@@ -11,4 +11,5 @@ urlpatterns = [
     path('new/', views.household_regist, name='regist'),
     path('edit/<int:pk>/', views.household_edit, name='edit'),
     path('delete/<int:pk>/', views.household_delete, name='delete'),
+    path('clear_payer/<str:payer_name>/', views.clear_payer, name='clear_payer'),
 ]

@@ -30,8 +30,8 @@
     </div>
 </div>
 
-<!-- 立替者ごとの合計 -->
-<div class="card mb-4 shadow-sm">
+<!-- 立替者ごとの合計と立替完了ボタン -->
+<div class="card shadow-sm mb-4">
     <div class="card-body">
         <h5 class="card-title mb-3">立替者ごとの合計</h5>
         {% if payer_totals %}
@@ -40,6 +40,10 @@
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 {{ payer.payer__name }}
                 <span class="badge bg-info rounded-pill">{{ payer.total }} 円</span>
+                <form method="POST" action="{% url 'household:clear_payer' payer.payer__name %}" onsubmit="return confirm('{{ payer.payer__name }} さんの立替データをクリアします。よろしいですか？');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger">立替完了</button>
+                </form>
             </li>
             {% endfor %}
         </ul>
