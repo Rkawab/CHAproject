@@ -53,7 +53,6 @@
             <p class="mb-1"><strong>費目:</strong> {{ entry.cost_item.name }}</p>
             <p class="mb-1"><strong>金額:</strong> {{ entry.amount|intcomma }} 円</p>
             <p class="mb-1"><strong>名称:</strong> {{ entry.description }}</p>
-            <p class="mb-1"><strong>カード:</strong> {{ entry.used_shared_card|yesno:"✔,✘" }}</p>
             <p class="mb-1"><strong>立替者:</strong> {{ entry.payer.name|default:"-" }}</p>
             <div class="mt-2 d-flex gap-2">
                 <a href="{% url 'household:edit' entry.pk %}" class="btn btn-sm btn-outline-primary">編集</a>
@@ -75,7 +74,6 @@
         <th scope="col">費目</th>
         <th scope="col">金額</th>
         <th scope="col">名称</th>
-        <th scope="col">カード</th>
         <th scope="col">立替者</th>
         <th scope="col">操作</th>
         </tr>
@@ -87,7 +85,6 @@
             <td>{{ entry.cost_item.name }}</td>
             <td class="text-end">\{{ entry.amount|intcomma }}</td>
             <td>{{ entry.description }}</td>
-            <td>{{ entry.used_shared_card|yesno:"✔,✘" }}</td>
             <td>{{ entry.payer.name|default:"-" }}</td>
             <td>
                 <a href="{% url 'household:edit' entry.pk %}" class="btn btn-sm btn-outline-primary">編集</a>

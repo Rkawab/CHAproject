@@ -10,7 +10,7 @@ class CostItem(models.Model):
         return self.name
 
 class Payer(models.Model):  # 立替者
-    name = models.CharField("立替者名", max_length=10)
+    name = models.CharField("立替者名", max_length=10, unique=True)
 
     class Meta:
         db_table = 'payer'
@@ -23,7 +23,6 @@ class HouseholdAccount(models.Model):  # 家計簿
     amount = models.PositiveIntegerField("金額")  # 正の整数に制限
     cost_item = models.ForeignKey(CostItem, verbose_name="費目", on_delete=models.SET("その他"))
     description = models.CharField("名称", max_length=50)
-    used_shared_card = models.BooleanField("共用カード使用", default=False, blank=True)
     payer = models.ForeignKey(Payer, verbose_name="立替者", null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
