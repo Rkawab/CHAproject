@@ -32,3 +32,5 @@ media/
 # macOS/Linux/Windows一時ファイル
 .DS_Store
 Thumbs.db
+
+infra/
