@@ -28,7 +28,7 @@
                 <ul class="navbar-nav ms-auto">
                     {% if user.is_authenticated %}  <!--認証されている場合の表示内容-->
                         <li class="nav-item">
-                            <a class="nav-link text-white" href="{% url 'variablecosts:list' %}">家計簿</a>
+                            <a class="nav-link text-white" href="{% url 'variablecosts:list' %}">家計簿(変動費)</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-white" href="{% url 'accounts:info' %}">ユーザー情報</a>

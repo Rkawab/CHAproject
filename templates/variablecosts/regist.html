@@ -2,7 +2,11 @@
 {% load widget_tweaks %}
 
 {% block content %}
-<h2 class="my-3">家計簿登録・編集</h2>
+{% if form.instance.pk %}
+    <h2 class="my-3">購入品の編集</h2>
+{% else %}
+    <h2 class="my-3">購入品の新規登録</h2>
+{% endif %}
 
 <form method="post" class="needs-validation" novalidate>
     {% csrf_token %}
