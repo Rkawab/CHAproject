@@ -6,16 +6,16 @@
 
 <!-- 月移動ナビ -->
 <div class="mb-3 d-flex justify-content-between">
-  <a href="{% url 'household:list_by_month' prev_month.year prev_month.month %}" class="btn btn-outline-secondary">← 前月</a>
+  <a href="{% url 'variablecosts:list_by_month' prev_month.year prev_month.month %}" class="btn btn-outline-secondary">← 前月</a>
 
   {% if next_month %}
-    <a href="{% url 'household:list_by_month' next_month.year next_month.month %}" class="btn btn-outline-secondary">翌月 →</a>
+    <a href="{% url 'variablecosts:list_by_month' next_month.year next_month.month %}" class="btn btn-outline-secondary">翌月 →</a>
   {% else %}
     <button class="btn btn-outline-secondary" disabled>翌月 →</button>
   {% endif %}
 </div>
 
-<a href="{% url 'household:regist' %}" class="btn btn-outline-primary mb-2">新規追加</a>
+<a href="{% url 'variablecosts:regist' %}" class="btn btn-outline-primary mb-2">新規追加</a>
 
 <!-- 合計金額の表示 -->
 <div class="card mb-4 shadow-sm">
@@ -55,8 +55,8 @@
             <p class="mb-1"><strong>名称:</strong> {{ entry.description }}</p>
             <p class="mb-1"><strong>立替者:</strong> {{ entry.payer.name|default:"-" }}</p>
             <div class="mt-2 d-flex gap-2">
-                <a href="{% url 'household:edit' entry.pk %}" class="btn btn-sm btn-outline-primary">編集</a>
-                <a href="{% url 'household:delete' entry.pk %}" class="btn btn-sm btn-outline-danger">削除</a>
+                <a href="{% url 'variablecosts:edit' entry.pk %}" class="btn btn-sm btn-outline-primary">編集</a>
+                <a href="{% url 'variablecosts:delete' entry.pk %}" class="btn btn-sm btn-outline-danger">削除</a>
             </div>
         </div>
     </div>
@@ -87,8 +87,8 @@
             <td>{{ entry.description }}</td>
             <td>{{ entry.payer.name|default:"-" }}</td>
             <td>
-                <a href="{% url 'household:edit' entry.pk %}" class="btn btn-sm btn-outline-primary">編集</a>
-                <a href="{% url 'household:delete' entry.pk %}" class="btn btn-sm btn-outline-danger">削除</a>
+                <a href="{% url 'variablecosts:edit' entry.pk %}" class="btn btn-sm btn-outline-primary">編集</a>
+                <a href="{% url 'variablecosts:delete' entry.pk %}" class="btn btn-sm btn-outline-danger">削除</a>
             </td>
         </tr>
         {% empty %}

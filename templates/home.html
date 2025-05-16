@@ -40,7 +40,7 @@
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 {{ payer.payer__name }}
                 <span class="badge bg-info rounded-pill">{{ payer.total }} 円</span>
-                <form method="POST" action="{% url 'household:clear_payer' payer.payer__name %}" onsubmit="return confirm('{{ payer.payer__name }} さんの立替データをクリアします。よろしいですか？');">
+                <form method="POST" action="{% url 'variablecosts:clear_payer' payer.payer__name %}" onsubmit="return confirm('{{ payer.payer__name }} さんの立替データをクリアします。よろしいですか？');">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-sm btn-outline-danger">立替完了</button>
                 </form>
@@ -54,6 +54,6 @@
 </div>
 
 
-<a href="{% url 'household:regist' %}" class="btn btn-outline-primary mb-2">新規追加</a>
+<a href="{% url 'variablecosts:regist' %}" class="btn btn-outline-primary mb-2">新規追加</a>
 
 {% endblock content %}

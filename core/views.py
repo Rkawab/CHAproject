@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.utils.timezone import now
-from finance.models import HouseholdAccount
+from variablecosts.models import VariableCost
 from django.db.models import Sum
 from datetime import datetime
 
@@ -13,7 +13,7 @@ def home(request):
     first_day = today.replace(day=1)
 
     # 今月の出費（購入日が今月のデータ）
-    monthly_entries = HouseholdAccount.objects.filter(purchase_date__gte=first_day, purchase_date__lte=today)
+    monthly_entries = VariableCost.objects.filter(purchase_date__gte=first_day, purchase_date__lte=today)
 
     # 今月の出費額の合計
     total_amount = monthly_entries.aggregate(total=Sum('amount'))['total'] or 0

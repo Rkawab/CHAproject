@@ -6,5 +6,5 @@ urlpatterns = [
     # path('ブラウザでアクセスするURL', さらに細かいURL設定が書かれたファイルを読み込む)
     path('', include('core.urls')),
     path('accounts/', include('accounts.urls')),  # "accounts/" 以下のURLを accounts.urls に委任
-    path('finance/', include('finance.urls')),
+    path('variablecosts/', include('variablecosts.urls')),
 ]

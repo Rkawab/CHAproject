@@ -18,7 +18,7 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]  # ← これがないと 
 SECRET_KEY = os.getenv("SECRET_KEY", "dummy-development-secret")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'core',
     'accounts',
-    'finance',
+    'variablecosts',
     'widget_tweaks',
 ]
 

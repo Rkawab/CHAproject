@@ -1,11 +1,13 @@
 from django import forms
-from .models import HouseholdAccount
+from .models import VariableCost
 from django.utils import timezone
 
 
-class HouseholdAccountForm(forms.ModelForm):
+
+
+class VariableCostForm(forms.ModelForm):
     class Meta:
-        model = HouseholdAccount
+        model = VariableCost
         fields = ['purchase_date', 'amount', 'cost_item', 'description', 'payer']
         labels = {
             'purchase_date': '購入日',
@@ -29,3 +31,4 @@ class HouseholdAccountForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+

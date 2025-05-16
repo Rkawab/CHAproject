@@ -20,22 +20,17 @@
     {% include "includes/bootstrap_field.html" with field=form.cost_item %}
     {% include "includes/bootstrap_field.html" with field=form.description %}
     
-    <div class="form-check mb-3">
-        {% render_field form.used_shared_card class="form-check-input" %}
-        <label class="form-check-label" for="{{ form.used_shared_card.id_for_label }}">
-            {{ form.used_shared_card.label }}
-        </label>
-    </div>
+
 
     {% include "includes/bootstrap_field.html" with field=form.payer %}
 
     <button type="submit" class="btn btn-outline-primary">保存</button>
     {% if form.instance.pk %}
-        <a href="{% url 'household:delete' form.instance.pk %}" class="btn btn-outline-danger">削除</a>
+        <a href="{% url 'variablecosts:delete' form.instance.pk %}" class="btn btn-outline-danger">削除</a>
     {% endif %}
 </form><br>
 
-<a href="{% url 'household:list' %}" class="btn btn-outline-secondary mb-2">一覧に戻る</a><br>
+<a href="{% url 'variablecosts:list' %}" class="btn btn-outline-secondary mb-2">一覧に戻る</a><br>
 
 {% include "includes/calculator_modal.html" %}
 <script>

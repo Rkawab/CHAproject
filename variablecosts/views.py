@@ -3,15 +3,15 @@ from calendar import monthrange
 from django.utils.timezone import make_aware
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .models import HouseholdAccount
-from .forms import HouseholdAccountForm
+from .models import VariableCost
+from .forms import VariableCostForm
 from django.db.models import Sum
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 
 
 @login_required
-def household_list(request, year=None, month=None):
+def variablecosts_list(request, year=None, month=None):
     today = date.today()
 
     if year is None or month is None:
@@ -24,13 +24,13 @@ def household_list(request, year=None, month=None):
     end_date = date(year, month, last_day)
 
     # 月のフィルタで取得
-    entries = HouseholdAccount.objects.filter(purchase_date__range=(start_date, end_date)).order_by('purchase_date')
+    entries = VariableCost.objects.filter(purchase_date__range=(start_date, end_date)).order_by('purchase_date')
 
 
     # 合計額と費目ごとの合計を追加
     total_amount = entries.aggregate(total=Sum('amount'))['total'] or 0
-    # ※ここが修正点：cost_itemごとにまとめる（entriesではなくHouseholdAccountから直接）
-    cost_item_totals = (HouseholdAccount.objects
+    # ※ここが修正点：cost_itemごとにまとめる（entriesではなくVariableCostから直接）
+    cost_item_totals = (VariableCost.objects
                         .filter(purchase_date__range=(start_date, end_date))
                         .values('cost_item__name')
                         .annotate(total=Sum('amount'))
@@ -44,7 +44,7 @@ def household_list(request, year=None, month=None):
     if next_month > today.replace(day=1):
         next_month = None
 
-    return render(request, 'household/list.html', {
+    return render(request, 'variablecosts/list.html', {
         'entries': entries,
         'year': year,
         'month': month,
@@ -55,45 +55,45 @@ def household_list(request, year=None, month=None):
     })
 
 @login_required
-def household_regist(request):
+def variablecosts_regist(request):
     if request.method == 'POST':
-        form = HouseholdAccountForm(request.POST)
+        form = VariableCostForm(request.POST)
         if form.is_valid():
             form.save(commit=True)
-            return redirect('household:list')
+            return redirect('variablecosts:list')
     else:
-        form = HouseholdAccountForm()
-    return render(request, 'household/regist.html', {
+        form = VariableCostForm()
+    return render(request, 'variablecosts/regist.html', {
         'form': form
     })
 
 @login_required
-def household_edit(request, pk):
-    entry = get_object_or_404(HouseholdAccount, pk=pk)
+def variablecosts_edit(request, pk):
+    entry = get_object_or_404(VariableCost, pk=pk)
     if request.method == 'POST':
-        form = HouseholdAccountForm(request.POST, instance=entry)
+        form = VariableCostForm(request.POST, instance=entry)
         if form.is_valid():
             form.save(commit=True)
-            return redirect('household:list')
+            return redirect('variablecosts:list')
     else:
-        form = HouseholdAccountForm(instance=entry)
-    return render(request, 'household/regist.html', {
+        form = VariableCostForm(instance=entry)
+    return render(request, 'variablecosts/regist.html', {
         'form': form
     })
 
 @login_required
-def household_delete(request, pk):
-    entry = get_object_or_404(HouseholdAccount, pk=pk)
+def variablecosts_delete(request, pk):
+    entry = get_object_or_404(VariableCost, pk=pk)
     if request.method == "POST":
         entry.delete()
-        return redirect('household:list')
-    return render(request, 'household/delete_confirm.html', {
+        return redirect('variablecosts:list')
+    return render(request, 'variablecosts/delete_confirm.html', {
         'entry': entry
     })
 
 @login_required
 @require_POST
 def clear_payer(request, payer_name):
-    updated_count = HouseholdAccount.objects.filter(payer__name=payer_name).update(payer=None)
+    updated_count = VariableCost.objects.filter(payer__name=payer_name).update(payer=None)
     messages.success(request, f"{payer_name} さんの立替データ（{updated_count}件）をクリアしました。")
     return redirect('core:home')
