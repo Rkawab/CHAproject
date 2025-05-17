@@ -2,7 +2,7 @@
 {% load humanize %}
 {% block content %}
 
-<h2 class="mb-4">家計簿一覧（{{ year }}年{{ month }}月）</h2>
+<h2 class="mb-4">購入品一覧（{{ year }}年{{ month }}月）</h2>
 
 <!-- 月移動ナビ -->
 <div class="mb-3 d-flex justify-content-between">
@@ -20,7 +20,7 @@
 <!-- 合計金額の表示 -->
 <div class="card mb-4 shadow-sm">
     <div class="card-body">
-        <h5 class="card-title">この月の出費合計</h5>
+        <h5 class="card-title">この月の変動費合計</h5>
         <p class="card-text fs-4 fw-bold text-primary">{{ total_amount|intcomma }} 円</p>
     </div>
 </div>
@@ -49,14 +49,25 @@
     {% for entry in entries %}
     <div class="card mb-3 shadow-sm">
         <div class="card-body">
-            <h6 class="card-title">{{ entry.purchase_date }}</h6>
-            <p class="mb-1"><strong>費目:</strong> {{ entry.cost_item.name }}</p>
-            <p class="mb-1"><strong>金額:</strong> {{ entry.amount|intcomma }} 円</p>
-            <p class="mb-1"><strong>名称:</strong> {{ entry.description }}</p>
-            <p class="mb-1"><strong>立替者:</strong> {{ entry.payer.name|default:"-" }}</p>
-            <div class="mt-2 d-flex gap-2">
-                <a href="{% url 'variablecosts:edit' entry.pk %}" class="btn btn-sm btn-outline-primary">編集</a>
-                <a href="{% url 'variablecosts:delete' entry.pk %}" class="btn btn-sm btn-outline-danger">削除</a>
+            <!-- 1段目：日付＋操作 -->
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-1">{{ entry.purchase_date }}</h6>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'variablecosts:edit' entry.pk %}" class="btn btn-sm btn-outline-primary">編集</a>
+                    <a href="{% url 'variablecosts:delete' entry.pk %}" class="btn btn-sm btn-outline-danger">削除</a>
+                </div>
+            </div>
+
+            <!-- 2段目：費目・金額・立替者 -->
+            <div class="row small text-nowrap">
+                <div class="col-4"><strong>費目:</strong> {{ entry.cost_item.name }}</div>
+                <div class="col-4"><strong>金額:</strong> {{ entry.amount|intcomma }} 円</div>
+                <div class="col-4"><strong>立替者:</strong> {{ entry.payer.name|default:"-" }}</div>
+            </div>
+
+            <!-- 3段目：名称（1行） -->
+            <div class="mt-1">
+                <strong>名称:</strong> {{ entry.description }}
             </div>
         </div>
     </div>
