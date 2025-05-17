@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block content %}
 <h2 class="mb-4">家計簿アプリへようこそ</h2>
@@ -7,7 +8,7 @@
 <div class="card mb-4 shadow-sm">
     <div class="card-body">
         <h5 class="card-title">今月の出費合計</h5>
-        <p class="card-text fs-4 fw-bold text-primary">{{ total_amount }} 円</p>
+        <p class="card-text fs-4 fw-bold text-primary">{{ total_amount|intcomma }} 円</p>
     </div>
 </div>
 
@@ -20,7 +21,7 @@
             {% for item in cost_item_totals %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 {{ item.cost_item__name }}
-                <span class="badge bg-secondary rounded-pill">{{ item.total }} 円</span>
+                <span class="badge bg-secondary rounded-pill">{{ item.total|intcomma }} 円</span>
             </li>
             {% endfor %}
         </ul>
@@ -39,7 +40,7 @@
             {% for payer in payer_totals %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 {{ payer.payer__name }}
-                <span class="badge bg-info rounded-pill">{{ payer.total }} 円</span>
+                <span class="badge bg-info rounded-pill">{{ payer.total|intcomma }} 円</span>
                 <form method="POST" action="{% url 'variablecosts:clear_payer' payer.payer__name %}" onsubmit="return confirm('{{ payer.payer__name }} さんの立替データをクリアします。よろしいですか？');">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-sm btn-outline-danger">立替完了</button>
