@@ -2,7 +2,7 @@
 {% load humanize %}
 {% block content %}
 
-<h2 class="mb-4">固定費（{{ year }}年{{ month }}月）</h2>
+<h2 class="mb-4">固定費一覧（{{ year }}年{{ month }}月）</h2>
 
 <!-- 月移動ナビ -->
 <div class="mb-3 d-flex justify-content-between">
@@ -33,9 +33,8 @@
   {% endif %}
 </div>
 
-<!-- 固定費の詳細表示 -->
 {% if fixed_cost %}
-  <!-- 合計金額の表示 -->
+  <!-- 合計 -->
   <div class="card mb-4 shadow-sm">
     <div class="card-body">
       <h5 class="card-title">この月の固定費合計</h5>
@@ -43,64 +42,30 @@
     </div>
   </div>
 
-  <!-- ◆◆◆ モバイル用：カード形式表示 ◆◆◆ -->
+  <!-- モバイル表示 -->
   <div class="d-block d-md-none">
-    <div class="card mb-3 shadow-sm">
-      <div class="card-header bg-light">
-        <h6 class="mb-0">家賃</h6>
-      </div>
-      <div class="card-body">
-        <p class="card-text">{% if fixed_cost.rent is not None %}{{ fixed_cost.rent|intcomma }} 円{% else %}未設定{% endif %}</p>
-      </div>
-    </div>
+    {% for label, value, note in items %}
+      <div class="card mb-3 shadow-sm">
+        <div class="card-header bg-light">
+          <h6 class="mb-0">{{ label }}{% if label == "水道代" %} (半額にして反映){% endif %}</h6>
+        </div>
+        <div class="card-body">
+          <p class="card-text">
+            {% if value is not None %}
+              {{ value|intcomma }} 円
+            {% elif value == 0 %}
+              未入力
+            {% else %}
+              未設定
+            {% endif %}
 
-    <div class="card mb-3 shadow-sm">
-      <div class="card-header bg-light">
-        <h6 class="mb-0">水道代 {% if fixed_cost.water is None %}(平均: {{ adjusted_water|floatformat:0|intcomma }} 円){% endif %}</h6>
+          </p>
+        </div>
       </div>
-      <div class="card-body">
-        <p class="card-text">{% if fixed_cost.water is not None %}{{ fixed_cost.water|intcomma }} 円{% else %}未登録{% endif %}</p>
-      </div>
-    </div>
-
-    <div class="card mb-3 shadow-sm">
-      <div class="card-header bg-light">
-        <h6 class="mb-0">電気代</h6>
-      </div>
-      <div class="card-body">
-        <p class="card-text">{% if fixed_cost.electricity is not None %}{{ fixed_cost.electricity|intcomma }} 円{% else %}未設定{% endif %}</p>
-      </div>
-    </div>
-
-    <div class="card mb-3 shadow-sm">
-      <div class="card-header bg-light">
-        <h6 class="mb-0">ガス代</h6>
-      </div>
-      <div class="card-body">
-        <p class="card-text">{% if fixed_cost.gas is not None %}{{ fixed_cost.gas|intcomma }} 円{% else %}未設定{% endif %}</p>
-      </div>
-    </div>
-
-    <div class="card mb-3 shadow-sm">
-      <div class="card-header bg-light">
-        <h6 class="mb-0">インターネット代</h6>
-      </div>
-      <div class="card-body">
-        <p class="card-text">{% if fixed_cost.internet is not None %}{{ fixed_cost.internet|intcomma }} 円{% else %}未設定{% endif %}</p>
-      </div>
-    </div>
-
-    <div class="card mb-3 shadow-sm">
-      <div class="card-header bg-light">
-        <h6 class="mb-0">サブスクリプション代</h6>
-      </div>
-      <div class="card-body">
-        <p class="card-text">{% if fixed_cost.subscriptions is not None %}{{ fixed_cost.subscriptions|intcomma }} 円{% else %}未設定{% endif %}</p>
-      </div>
-    </div>
+    {% endfor %}
   </div>
 
-  <!-- ◆◆◆ PC用：テーブル形式 ◆◆◆ -->
+  <!-- PC表示 -->
   <div class="table-responsive d-none d-md-block">
     <table class="table table-striped table-bordered">
       <thead class="table-light">
@@ -110,30 +75,15 @@
         </tr>
       </thead>
       <tbody>
+        <tr><td>家賃</td><td class="text-end">{{ fixed_cost.rent|default:"-"|intcomma }} 円</td></tr>
         <tr>
-          <td>家賃</td>
-          <td class="text-end">{% if fixed_cost.rent is not None %}{{ fixed_cost.rent|intcomma }} 円{% else %}-{% endif %}</td>
+          <td>水道代{% if fixed_cost.water is None %} (先月分を反映){% else %} (半額にして計算){% endif %}</td>
+          <td class="text-end">{{ adjusted_water|intcomma }} 円</td>
         </tr>
-        <tr>
-          <td>水道代 {% if fixed_cost.water is None %}(平均: {{ adjusted_water|floatformat:0|intcomma }} 円){% endif %}</td>
-          <td class="text-end">{% if fixed_cost.water is not None %}{{ fixed_cost.water|intcomma }} 円{% else %}-{% endif %}</td>
-        </tr>
-        <tr>
-          <td>電気代</td>
-          <td class="text-end">{% if fixed_cost.electricity is not None %}{{ fixed_cost.electricity|intcomma }} 円{% else %}-{% endif %}</td>
-        </tr>
-        <tr>
-          <td>ガス代</td>
-          <td class="text-end">{% if fixed_cost.gas is not None %}{{ fixed_cost.gas|intcomma }} 円{% else %}-{% endif %}</td>
-        </tr>
-        <tr>
-          <td>インターネット代</td>
-          <td class="text-end">{% if fixed_cost.internet is not None %}{{ fixed_cost.internet|intcomma }} 円{% else %}-{% endif %}</td>
-        </tr>
-        <tr>
-          <td>サブスクリプション代</td>
-          <td class="text-end">{% if fixed_cost.subscriptions is not None %}{{ fixed_cost.subscriptions|intcomma }} 円{% else %}-{% endif %}</td>
-        </tr>
+        <tr><td>電気代</td><td class="text-end">{{ fixed_cost.electricity|default:"-"|intcomma }} 円</td></tr>
+        <tr><td>ガス代</td><td class="text-end">{{ fixed_cost.gas|default:"-"|intcomma }} 円</td></tr>
+        <tr><td>インターネット代</td><td class="text-end">{{ fixed_cost.internet|default:"-"|intcomma }} 円</td></tr>
+        <tr><td>サブスクリプション代</td><td class="text-end">{{ fixed_cost.subscriptions|default:"-"|intcomma }} 円</td></tr>
         <tr class="table-secondary">
           <td class="fw-bold">合計</td>
           <td class="text-end fw-bold">{{ total_cost|intcomma }} 円</td>

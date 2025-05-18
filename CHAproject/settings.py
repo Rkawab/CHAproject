@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'core',
     'accounts',
     'variablecosts',
+    'fixedcosts',
     'widget_tweaks',
 ]
 
