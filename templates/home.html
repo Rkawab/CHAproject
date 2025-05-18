@@ -14,11 +14,11 @@
         {% if total_fixed_cost %}
         <ul class="list-group">
             <li class="list-group-item d-flex justify-content-between align-items-center">
-                固定費合計
+                固定費合計 (予算 : 165,000円)
                 <span class="badge bg-info">{{ total_fixed_cost|intcomma }} 円</span>
             </li>
             <li class="list-group-item d-flex justify-content-between align-items-center">
-                変動費合計
+                変動費合計  (予算 : 75,000円)
                 <span class="badge bg-secondary">{{ total_variable_cost|intcomma }} 円</span>
             </li>
         </ul>
@@ -43,7 +43,7 @@
 <!-- 費目ごとの合計表示 -->
 <div class="card mb-4 shadow-sm">
     <div class="card-body">
-        <h5 class="card-title mb-3">変動費目ごとの合計</h5>
+        <h5 class="card-title mb-3">変動費目の内訳</h5>
         {% if cost_item_totals %}
         <ul class="list-group">
             {% for item in cost_item_totals %}
@@ -62,7 +62,7 @@
 <!-- 立替者ごとの合計と立替完了ボタン -->
 <div class="card shadow-sm mb-4">
     <div class="card-body">
-        <h5 class="card-title mb-3">立替者ごとの合計</h5>
+        <h5 class="card-title mb-3">立替金額</h5>
         {% if payer_totals %}
         <ul class="list-group">
             {% for payer in payer_totals %}
