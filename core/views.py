@@ -5,6 +5,8 @@ from variablecosts.models import VariableCost
 from django.db.models import Sum
 from datetime import datetime
 from fixedcosts.models import FixedCost
+from collections import OrderedDict
+
 
 
 # ホーム画面を表示するビュー
@@ -34,7 +36,24 @@ def home(request):
     fixed_cost = FixedCost.objects.filter(year=year, month=month).first()
 
     total_fixed_cost = 0
+    missing_fixed_items = []
+
     if fixed_cost:
+        # 項目とラベルの対応（順序あり）
+        items = OrderedDict([
+            ('rent', '家賃'),
+            ('electricity', '電気代'),
+            ('gas', 'ガス代'),
+            ('internet', 'ネット代'),
+            ('subscriptions', 'サブスク代'),
+            ('water', '水道代'),  # 注意：adjustedの判定にも使う
+        ])
+
+        for attr, label in items.items():
+            value = getattr(fixed_cost, attr)
+            if value == 0:
+                missing_fixed_items.append(label)
+
         # 水道代は半額で計算
         adjusted_water = fixed_cost.water if fixed_cost.water is not None else None
         if adjusted_water is None:
@@ -59,5 +78,8 @@ def home(request):
         'payer_totals': payer_totals,
         'total_variable_cost' : total_variable_cost,
         'total_fixed_cost' : total_fixed_cost,
+        'missing_fixed_items': missing_fixed_items,
+        'year': year,
+        'month': month,
     })
         # render(リクエスト情報, 表示するテンプレート, {HTMLで使用するデータ})

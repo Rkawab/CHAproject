@@ -15,7 +15,7 @@
         <ul class="list-group">
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 固定費合計
-                <span class="badge bg-primary">{{ total_fixed_cost|intcomma }} 円</span>
+                <span class="badge bg-info">{{ total_fixed_cost|intcomma }} 円</span>
             </li>
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 変動費合計
@@ -24,6 +24,18 @@
         </ul>
         {% else %}
         <p class="text-muted">今月の出費データはありません。</p>
+        {% endif %}
+        {% if missing_fixed_items %}
+            <div class="alert alert-warning d-flex justify-content-between align-items-center flex-wrap">
+            <div class="mb-2 mb-md-0">
+                <strong>未入力の固定費：</strong>
+                <a href="{% url 'fixedcosts:edit_by_month' year month %}" class="btn btn-sm btn-outline-primary">今月の固定費を編集</a><br>
+                {% for item in missing_fixed_items %}
+                <span class="badge bg-info text-write me-1">{{ item }}</span>
+                {% endfor %}
+            </div>
+
+            </div>
         {% endif %}
     </div>
 </div>
@@ -56,7 +68,7 @@
             {% for payer in payer_totals %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 {{ payer.payer__name }}
-                <span class="badge bg-info rounded-pill">{{ payer.total|intcomma }} 円</span>
+                <span class="badge bg-warning text-dark rounded-pill">{{ payer.total|intcomma }} 円</span>
                 <form method="POST" action="{% url 'variablecosts:clear_payer' payer.payer__name %}" onsubmit="return confirm('{{ payer.payer__name }} さんの立替データをクリアします。よろしいですか？');">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-sm btn-outline-danger">立替完了</button>

@@ -69,8 +69,8 @@ def fixedcosts_list(request, year=None, month=None):
             ('水道代', adjusted_water, ''),
             ('電気代', fixed_cost.electricity, ''),
             ('ガス代', fixed_cost.gas, ''),
-            ('インターネット代', fixed_cost.internet, ''),
-            ('サブスクリプション代', fixed_cost.subscriptions, ''),
+            ('ネット代', fixed_cost.internet, ''),
+            ('サブスク代', fixed_cost.subscriptions, ''),
         ]
 
     return render(request, 'fixedcosts/list.html', {
