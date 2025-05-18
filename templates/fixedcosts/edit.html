@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+<h2 class="my-3">{% if is_new %}{{ year }}年{{ month }}月の固定費を登録{% else %}{{ year }}年{{ month }}月の固定費を編集{% endif %}</h2>
+
+<form method="post" class="needs-validation" novalidate>
+    {% csrf_token %}
+
+    <div class="row mb-3">
+        <div class="col-md-2">
+            <label for="{{ form.year.id_for_label }}" class="form-label">{{ form.year.label }}</label>
+            {% render_field form.year class="form-control" min="2000" max="2100" %}
+            {% if form.year.errors %}
+            <div class="text-danger small">
+                {% for error in form.year.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-md-2">
+            <label for="{{ form.month.id_for_label }}" class="form-label">{{ form.month.label }}</label>
+            {% render_field form.month class="form-control" min="1" max="12" %}
+            {% if form.month.errors %}
+            <div class="text-danger small">
+                {% for error in form.month.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">固定費データ</div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="{{ form.rent.id_for_label }}" class="form-label">{{ form.rent.label }}</label>
+                    <div class="input-group">
+                        {% render_field form.rent class="form-control calc-target" %}
+                        <button type="button" class="btn btn-outline-secondary calc-btn" data-target="{{ form.rent.id_for_label }}">電卓</button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.water.id_for_label }}" class="form-label">{{ form.water.label }} <small class="text-muted">(2ヶ月に1回の場合は空欄)</small></label>
+                    <div class="input-group">
+                        {% render_field form.water class="form-control calc-target" %}
+                        <button type="button" class="btn btn-outline-secondary calc-btn" data-target="{{ form.water.id_for_label }}">電卓</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="{{ form.electricity.id_for_label }}" class="form-label">{{ form.electricity.label }}</label>
+                    <div class="input-group">
+                        {% render_field form.electricity class="form-control calc-target" %}
+                        <button type="button" class="btn btn-outline-secondary calc-btn" data-target="{{ form.electricity.id_for_label }}">電卓</button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.gas.id_for_label }}" class="form-label">{{ form.gas.label }}</label>
+                    <div class="input-group">
+                        {% render_field form.gas class="form-control calc-target" %}
+                        <button type="button" class="btn btn-outline-secondary calc-btn" data-target="{{ form.gas.id_for_label }}">電卓</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="{{ form.internet.id_for_label }}" class="form-label">{{ form.internet.label }}</label>
+                    <div class="input-group">
+                        {% render_field form.internet class="form-control calc-target" %}
+                        <button type="button" class="btn btn-outline-secondary calc-btn" data-target="{{ form.internet.id_for_label }}">電卓</button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.subscriptions.id_for_label }}" class="form-label">{{ form.subscriptions.label }}</label>
+                    <div class="input-group">
+                        {% render_field form.subscriptions class="form-control calc-target" %}
+                        <button type="button" class="btn btn-outline-secondary calc-btn" data-target="{{ form.subscriptions.id_for_label }}">電卓</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">保存</button>
+    <a href="{% url 'fixedcosts:list_by_month' year month %}" class="btn btn-outline-secondary">キャンセル</a>
+</form>
+
+{% include "includes/calculator_modal.html" %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 電卓ボタンのイベントハンドラー
+    const calcButtons = document.querySelectorAll('.calc-btn');
+    calcButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            openCalculator(targetId);
+        });
+    });
+});
+</script>
+{% endblock %}
