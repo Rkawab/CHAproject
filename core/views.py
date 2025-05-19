@@ -49,11 +49,6 @@ def home(request):
             ('water', '水道代'),  # 注意：adjustedの判定にも使う
         ])
 
-        for attr, label in items.items():
-            value = getattr(fixed_cost, attr)
-            if value == 0:
-                missing_fixed_items.append(label)
-
         # 水道代は半額で計算
         adjusted_water = fixed_cost.water if fixed_cost.water is not None else None
         if adjusted_water is None:
@@ -62,6 +57,13 @@ def home(request):
             prev_year = year if month > 1 else year - 1
             prev_fc = FixedCost.objects.filter(year=prev_year, month=prev_month).first()
             adjusted_water = prev_fc.water if prev_fc and prev_fc.water is not None else 0
+
+        for attr, label in items.items():
+            value = getattr(fixed_cost, attr)
+            if value in (0, None):  # 0かNoneの場合
+                if not (attr == 'water' and adjusted_water != 0):
+                    missing_fixed_items.append(label)
+
         total_fixed_cost = (
             (fixed_cost.rent or 0) +
             (fixed_cost.electricity or 0) +
