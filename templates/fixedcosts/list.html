@@ -77,8 +77,8 @@
       <tbody>
         <tr><td>家賃</td><td class="text-end">{{ fixed_cost.rent|default:"-"|intcomma }} 円</td></tr>
         <tr>
-          <td>水道代{% if fixed_cost.water is None %} (先月分を反映){% else %} (半額にして計算){% endif %}</td>
-          <td class="text-end">{{ adjusted_water|intcomma }} 円</td>
+          <td>水道代{% if fixed_cost.water is not None  %} (半額にして計算){% elif adjusted_water > 0 %} (先月分を反映){% endif %}</td>
+          <td class="text-end">{{ adjusted_water|default:"-"|intcomma }} 円</td>
         </tr>
         <tr><td>電気代</td><td class="text-end">{{ fixed_cost.electricity|default:"-"|intcomma }} 円</td></tr>
         <tr><td>ガス代</td><td class="text-end">{{ fixed_cost.gas|default:"-"|intcomma }} 円</td></tr>
