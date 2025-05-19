@@ -124,6 +124,15 @@ def fixedcosts_edit(request, year=None, month=None):
 def fixedcosts_delete(request, year, month):
     """固定費の削除"""
     fixed_cost = get_object_or_404(FixedCost, year=year, month=month)
+
+    cost_items = {
+        '家賃': fixed_cost.rent,
+        '水道代': fixed_cost.water,
+        '電気代': fixed_cost.electricity,
+        'ガス代': fixed_cost.gas,
+        'ネット代': fixed_cost.internet,
+        'サブスク代': fixed_cost.subscriptions,
+    }
     
     if request.method == "POST":
         fixed_cost.delete()
@@ -141,5 +150,6 @@ def fixedcosts_delete(request, year, month):
             return redirect('fixedcosts:list')
     
     return render(request, 'fixedcosts/delete_confirm.html', {
-        'fixed_cost': fixed_cost
+        'fixed_cost': fixed_cost,
+        'cost_items': cost_items,
     })

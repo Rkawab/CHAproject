@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block content %}
+<h2 class="my-3 text-danger">削除確認</h2>
+
+<p>この月の固定費データを本当に削除しますか？</p>
+
+<ul class="list-group mb-3">
+    {% for label, value in cost_items.items %}
+        {% if value %}
+            <li class="list-group-item">{{ label }}: {{ value|intcomma }}円</li>
+        {% endif %}
+    {% endfor %}
+</ul>
+
+
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline-danger">削除する</button>
+    <a href="{% url 'fixedcosts:list_by_month' fixed_cost.year fixed_cost.month %}" class="btn btn-secondary">キャンセル</a>
+</form>
+{% endblock %}
