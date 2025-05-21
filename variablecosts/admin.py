@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import CostItem, Payer, VariableCost
+from core.models import Payer, CostItem
+from .models import VariableCost
 
 admin.site.register(CostItem)
 admin.site.register(Payer)
