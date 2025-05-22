@@ -8,4 +8,5 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),  # "accounts/" 以下のURLを accounts.urls に委任
     path('variablecosts/', include('variablecosts.urls')),
     path('fixedcosts/', include('fixedcosts.urls')),
+    path('largecosts/', include('largecosts.urls')),
 ]

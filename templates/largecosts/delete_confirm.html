@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="my-3 text-danger">削除確認</h2>
+
+<p>以下のデータを本当に削除してもよろしいですか？</p>
+
+<ul class="list-group mb-3">
+    <li class="list-group-item">日付: {{ entry.purchase_date }}</li>
+    <li class="list-group-item">費目: {{ entry.cost_item.name }}</li>
+    <li class="list-group-item">金額: {{ entry.amount }} 円</li>
+    <li class="list-group-item">名称: {{ entry.description }}</li>
+</ul>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline-danger">削除する</button>
+    <a href="{% url 'largecosts:list' %}" class="btn btn-outline-secondary">キャンセル</a>
+</form>
+{% endblock %}

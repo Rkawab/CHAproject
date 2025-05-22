@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block content %}
+
+<h2 class="mb-4">大きな出費一覧（{{ year }}年{{ month }}月）</h2>
+
+<div class="mb-3 d-flex justify-content-between">
+  <a href="{% url 'largecosts:list_by_month' prev_month.year prev_month.month %}" class="btn btn-outline-secondary">← 前月</a>
+
+  {% if next_month %}
+    <a href="{% url 'largecosts:list_by_month' next_month.year next_month.month %}" class="btn btn-outline-secondary">翌月 →</a>
+  {% else %}
+    <button class="btn btn-outline-secondary" disabled>翌月 →</button>
+  {% endif %}
+</div>
+
+<a href="{% url 'largecosts:regist' %}" class="btn btn-outline-primary mb-2">新規追加</a>
+
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <h5 class="card-title">この月の合計</h5>
+        <p class="card-text fs-4 fw-bold text-primary">{{ total_amount|intcomma }} 円</p>
+    </div>
+</div>
+
+<!-- ◆ モバイル表示 ◆ -->
+<div class="d-block d-md-none">
+    {% for entry in entries %}
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-1">{{ entry.purchase_date }}</h6>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'largecosts:edit' entry.pk %}" class="btn btn-sm btn-outline-primary">編集</a>
+                    <a href="{% url 'largecosts:delete' entry.pk %}" class="btn btn-sm btn-outline-danger">削除</a>
+                </div>
+            </div>
+
+            <div class="row small text-nowrap">
+                <div class="col-4"><strong>費目:</strong> {{ entry.cost_item.name }}</div>
+                <div class="col-4"><strong>金額:</strong> {{ entry.amount|intcomma }} 円</div>
+                <div class="col-4"><strong>立替者:</strong> {{ entry.payer.name|default:"-" }}</div>
+            </div>
+
+            <div class="mt-1"><strong>名称:</strong> {{ entry.description }}</div>
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-muted">データがありません。</p>
+    {% endfor %}
+</div>
+
+<!-- ◆ PC表示 ◆ -->
+<div class="table-responsive d-none d-md-block">
+    <table class="table table-striped table-bordered">
+    <thead class="table-light text-center">
+        <tr>
+            <th>日付</th>
+            <th>費目</th>
+            <th>金額</th>
+            <th>名称</th>
+            <th>立替者</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody class="text-center">
+        {% for entry in entries %}
+        <tr>
+            <td>{{ entry.purchase_date }}</td>
+            <td>{{ entry.cost_item.name }}</td>
+            <td class="text-end">\{{ entry.amount|intcomma }}</td>
+            <td>{{ entry.description }}</td>
+            <td>{{ entry.payer.name|default:"-" }}</td>
+            <td>
+                <a href="{% url 'largecosts:edit' entry.pk %}" class="btn btn-sm btn-outline-primary">編集</a>
+                <a href="{% url 'largecosts:delete' entry.pk %}" class="btn btn-sm btn-outline-danger">削除</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-muted">データがありません。</td></tr>
+        {% endfor %}
+    </tbody>
+    </table>
+</div>
+
+{% endblock %}

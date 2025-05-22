@@ -26,15 +26,24 @@ CHAproject/
 │ ├── views.py # ユーザー登録・認証処理
 │ └── ...
 ├── core/ # ホーム画面など共通機能
-│ ├── views.py # ホームビュー（統計表示）
+│ └── views.py # ホームビュー（統計表示）
 ├── variablecosts/ # 変動費管理アプリ
 │ ├── models.py # 費目・出費モデル
+│ ├── views.py # 登録・編集・削除・月別表示
+│ └── ...
+├── fixedcosts/ # 固定費管理アプリ
+│ ├── models.py # 固定費モデル
+│ ├── views.py # 登録・編集・削除・月別表示
+│ └── ...
+├── largecosts/ # 大型出費管理アプリ
+│ ├── models.py # 大型出費モデル
 │ ├── views.py # 登録・編集・削除・月別表示
 │ └── ...
 ├── templates/ # HTMLテンプレート
 │ ├── base.html # レイアウト共通ファイル
 │ ├── accounts/ # 認証関連テンプレート
-│ ├── variablecosts/ # 家計簿画面
+│ ├── variablecosts/ # 変動費画面
+│ ├── fixedcosts/ # 固定費画面
 │ └── ...
 ├── static/ # 静的ファイル(CSS等)
 │ └── css/custom.css
