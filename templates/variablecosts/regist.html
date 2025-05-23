@@ -39,5 +39,11 @@
 {% include "includes/calculator_modal.html" %}
 <script>
 {{ your_calc_script_here }}
+// 二重送信の防止
+document.querySelector("form").addEventListener("submit", function(event) {
+    const submitButton = this.querySelector("button[type='submit']");
+    submitButton.disabled = true;
+    submitButton.innerText = "保存中…";
+});
 </script>
 {% endblock %}
