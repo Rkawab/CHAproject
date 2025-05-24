@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils.timezone import now
 from variablecosts.models import VariableCost
 from django.db.models import Sum
+from core.models import Budget
 from datetime import datetime
 from fixedcosts.models import FixedCost
 from collections import OrderedDict
@@ -74,6 +75,18 @@ def home(request):
         )
         total_amount = total_variable_cost + total_fixed_cost
 
+        # 予算データを取得
+        budgets = {b.category: b.amount for b in Budget.objects.all()}
+        fixed_budget = budgets.get('fixed', 0)
+        variable_budget = budgets.get('variable', 0)
+        total_budget = fixed_budget + variable_budget
+
+        # 残金（予算 - 実支出）を計算
+        remaining_fixed = fixed_budget - total_fixed_cost
+        remaining_variable = variable_budget - total_variable_cost
+        remaining_total = total_budget - total_amount
+
+
     return render(request, 'home.html', {
         'total_amount': total_amount,
         'cost_item_totals': cost_item_totals,
@@ -81,6 +94,12 @@ def home(request):
         'total_variable_cost' : total_variable_cost,
         'total_fixed_cost' : total_fixed_cost,
         'missing_fixed_items': missing_fixed_items,
+        'fixed_budget': fixed_budget,
+        'variable_budget': variable_budget,
+        'total_budget': total_budget,
+        'remaining_fixed': remaining_fixed,
+        'remaining_variable': remaining_variable,
+        'remaining_total': remaining_total,
         'year': year,
         'month': month,
     })

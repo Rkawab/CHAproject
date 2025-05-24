@@ -44,6 +44,7 @@ CHAproject/
 │ ├── accounts/ # 認証関連テンプレート
 │ ├── variablecosts/ # 変動費画面
 │ ├── fixedcosts/ # 固定費画面
+│ ├── largecosts/ # 大型出費画面
 │ └── ...
 ├── static/ # 静的ファイル(CSS等)
 │ └── css/custom.css

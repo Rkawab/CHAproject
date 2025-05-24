@@ -2,7 +2,7 @@
 {% load humanize %}
 {% block content %}
 
-<h2 class="mb-4">大きな出費一覧（{{ year }}年{{ month }}月）</h2>
+<h2 class="mb-4">大型出費（{{ year }}年{{ month }}月）</h2>
 
 <div class="mb-3 d-flex justify-content-between">
   <a href="{% url 'largecosts:list_by_month' prev_month.year prev_month.month %}" class="btn btn-outline-secondary">← 前月</a>

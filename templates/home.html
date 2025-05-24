@@ -9,19 +9,39 @@
 <!-- 合計金額の表示 -->
 <div class="card mb-4 shadow-sm">
     <div class="card-body">
-        <h5 class="card-title">今月の出費合計 (予算 : 240,000円)</h5>
-        <p class="card-text fs-4 fw-bold text-primary">{{ total_amount|intcomma }} 円</p>
+        <!-- タイトル -->
+        <h5 class="card-title mb-0">今月の出費合計</h5>
+
+        <!-- 使用金額と残額（横並び） -->
+        <p class="card-text fs-4 fw-bold text-primary d-flex align-items-center">
+            {{ total_amount|intcomma }} 円
+            <span class="badge ms-3 {% if remaining_total < 0 %}bg-danger{% else %}bg-primary{% endif %}">
+                残額 {{ remaining_total|intcomma }} 円
+            </span>
+        </p>
         {% if total_fixed_cost %}
-        <ul class="list-group">
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                固定費合計 (予算 : 165,000円)
-                <span class="badge bg-info">{{ total_fixed_cost|intcomma }} 円</span>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                変動費合計  (予算 : 75,000円)
-                <span class="badge bg-secondary">{{ total_variable_cost|intcomma }} 円</span>
-            </li>
-        </ul>
+            <ul class="list-group">
+                <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                    <strong class="me-2">固定費</strong>
+                    <div>
+                        <span class="badge bg-light text-dark">予算 {{ fixed_budget|intcomma }} 円</span>
+                        <span class="badge bg-secondary me-1">使用 {{ total_fixed_cost|intcomma }} 円</span>
+                        <span class="badge {% if remaining_fixed < 0 %}bg-danger{% else %}bg-primary{% endif %} me-1">
+                            残額 {{ remaining_fixed|intcomma }} 円
+                        </span>
+                    </div>
+                </li>
+                <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                    <strong class="me-2">変動費</strong>
+                    <div>
+                        <span class="badge bg-light text-dark">予算 {{ variable_budget|intcomma }} 円</span>
+                        <span class="badge bg-secondary me-1">使用 {{ total_variable_cost|intcomma }} 円</span>
+                        <span class="badge {% if remaining_variable < 0 %}bg-danger{% else %}bg-primary{% endif %} me-1">
+                            残額 {{ remaining_variable|intcomma }} 円
+                        </span>
+                    </div>
+                </li>
+            </ul>
         {% else %}
         <p class="text-muted">今月の出費データはありません。</p>
         {% endif %}
