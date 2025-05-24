@@ -70,5 +70,25 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     {% block extra_js %}{% endblock %}
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const forms = document.querySelectorAll("form");
+
+        forms.forEach(function (form) {
+            form.addEventListener("submit", function (event) {
+                const submitButtons = form.querySelectorAll("button[type='submit'], input[type='submit']");
+                submitButtons.forEach(function (btn) {
+                    btn.disabled = true;
+                    if (btn.tagName.toLowerCase() === 'button') {
+                        btn.innerText = "保存中…";
+                    } else if (btn.tagName.toLowerCase() === 'input') {
+                        btn.value = "保存中…";
+                    }
+                });
+            });
+        });
+    });
+    </script>
 </body>
 </html>
