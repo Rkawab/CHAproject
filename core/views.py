@@ -24,8 +24,8 @@ def home(request):
     # 費目ごとの合計
     cost_item_totals = monthly_entries.values('cost_item__name').annotate(total=Sum('amount'))
 
-    # 立替者ごとの合計
-    payer_totals = monthly_entries.filter(payer__isnull=False)\
+    # 立替金額合計(全期間)
+    payer_totals = VariableCost.objects.filter(payer__isnull=False)\
         .values('payer__name')\
         .annotate(total=Sum('amount'))\
         .order_by('payer__name')
