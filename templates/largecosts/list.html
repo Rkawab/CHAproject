@@ -21,14 +21,14 @@
 {% if settlement_info %}
 <div class="card shadow-sm mb-4">
     <div class="card-body">
-        <h5 class="card-title mb-3">未清算費用(清算は直接)</h5>
+        <h5 class="card-title mb-3">未精算費用(精算は直接)</h5>
         <ul class="list-group">
             <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div class="mt-1"><strong>{{ settlement_info.payer_from }}</strong> {{ entry.description }}</div>
+                <div class="mt-1"><strong>{{ settlement_info.payer_from }}</strong> が{{ entry.description }}</div>
                 <span class="badge bg-warning text-dark rounded-pill">{{ settlement_info.amount|intcomma }} 円</span>
                 <form method="POST" action="{% url 'largecosts:clear_settlement' %}" onsubmit="return confirm('清算処理を実行します。よろしいですか？');">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-outline-danger">清算完了</button>
+                    <button type="submit" class="btn btn-sm btn-outline-danger">送金実施</button>
                 </form>
             </li>
         </ul>
