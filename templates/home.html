@@ -21,20 +21,18 @@
         </p>
         {% if total_fixed_cost %}
             <ul class="list-group">
-                <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
                     <strong class="me-2">固定費</strong>
                     <div>
-                        <span class="badge bg-light text-dark">予算 {{ fixed_budget|intcomma }} 円</span>
                         <span class="badge bg-secondary me-1">使用 {{ total_fixed_cost|intcomma }} 円</span>
                         <span class="badge {% if remaining_fixed < 0 %}bg-danger{% else %}bg-primary{% endif %} me-1">
                             残額 {{ remaining_fixed|intcomma }} 円
                         </span>
                     </div>
                 </li>
-                <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
                     <strong class="me-2">変動費</strong>
                     <div>
-                        <span class="badge bg-light text-dark">予算 {{ variable_budget|intcomma }} 円</span>
                         <span class="badge bg-secondary me-1">使用 {{ total_variable_cost|intcomma }} 円</span>
                         <span class="badge {% if remaining_variable < 0 %}bg-danger{% else %}bg-primary{% endif %} me-1">
                             残額 {{ remaining_variable|intcomma }} 円
@@ -82,16 +80,16 @@
 <!-- 立替者ごとの合計と立替完了ボタン -->
 <div class="card shadow-sm mb-4">
     <div class="card-body">
-        <h5 class="card-title mb-3">立替金額(清算は共用口座から)</h5>
+        <h5 class="card-title mb-3">立替金額(精算は共用口座から)</h5>
         {% if payer_totals %}
         <ul class="list-group">
             {% for payer in payer_totals %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
-                {{ payer.payer__name }}
+                <span class="d-inline-block" style="min-width: 80px;">{{ payer.payer__name }} に</span>
                 <span class="badge bg-warning text-dark rounded-pill">{{ payer.total|intcomma }} 円</span>
-                <form method="POST" action="{% url 'variablecosts:clear_payer' payer.payer__name %}" onsubmit="return confirm('{{ payer.payer__name }} さんの立替データをクリアします。よろしいですか？');">
+                <form method="POST" action="{% url 'variablecosts:clear_payer' payer.payer__name %}" onsubmit="return confirm('{{ payer.payer__name }} さんへ精算を実施します。よろしいですか？');">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-outline-danger">立替完了</button>
+                    <button type="submit" class="btn btn-sm btn-outline-danger">入金実施</button>
                 </form>
             </li>
             {% endfor %}
