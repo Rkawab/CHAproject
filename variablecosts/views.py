@@ -34,7 +34,7 @@ def variablecosts_list(request, year=None, month=None):
                         .filter(purchase_date__range=(start_date, end_date))
                         .values('cost_item__name')
                         .annotate(total=Sum('amount'))
-                        .order_by('cost_item__name'))
+                        .order_by('cost_item__id'))
 
     # ナビゲーション用の前月・次月
     prev_month = (start_date - timedelta(days=1)).replace(day=1)

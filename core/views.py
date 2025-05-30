@@ -23,7 +23,7 @@ def home(request):
     total_variable_cost = monthly_entries.aggregate(total=Sum('amount'))['total'] or 0
 
     # 費目ごとの合計
-    cost_item_totals = monthly_entries.values('cost_item__name').annotate(total=Sum('amount'))
+    cost_item_totals = monthly_entries.values('cost_item__name').annotate(total=Sum('amount')).order_by('cost_item__id')
 
     # 立替金額合計(全期間)
     payer_totals = VariableCost.objects.filter(payer__isnull=False)\
