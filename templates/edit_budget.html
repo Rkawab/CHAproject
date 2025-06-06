@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}予算の編集{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">予算の編集</h2>
+
+<form method="post">
+    {% csrf_token %}
+    
+    <div class="mb-4">
+        <h5>固定費の予算</h5>
+        {{ fixed_form.as_p }}
+    </div>
+
+    <div class="mb-4">
+        <h5>変動費の予算</h5>
+        {{ variable_form.as_p }}
+    </div>
+
+    <button type="submit" class="btn btn-primary">保存</button>
+    <a href="{% url 'core:home' %}" class="btn btn-secondary">キャンセル</a>
+</form>
+{% endblock %}

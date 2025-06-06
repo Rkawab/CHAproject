@@ -1,12 +1,14 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.utils.timezone import now
+from django.contrib import messages
 from variablecosts.models import VariableCost
 from django.db.models import Sum
 from core.models import Budget
 from datetime import datetime
 from fixedcosts.models import FixedCost
 from collections import OrderedDict
+from .forms import BudgetForm
 
 
 
@@ -104,3 +106,27 @@ def home(request):
         'month': month,
     })
         # render(リクエスト情報, 表示するテンプレート, {HTMLで使用するデータ})
+
+@login_required
+def edit_budget(request):
+    budgets = {b.category: b for b in Budget.objects.all()}
+    fixed_budget = budgets.get('fixed', Budget(category='fixed'))
+    variable_budget = budgets.get('variable', Budget(category='variable'))
+
+    if request.method == 'POST':
+        fixed_form = BudgetForm(request.POST, instance=fixed_budget, prefix='fixed')
+        variable_form = BudgetForm(request.POST, instance=variable_budget, prefix='variable')
+
+        if fixed_form.is_valid() and variable_form.is_valid():
+            fixed_form.save()
+            variable_form.save()
+            messages.success(request, '予算を更新しました。')
+            return redirect('core:home')
+    else:
+        fixed_form = BudgetForm(instance=fixed_budget, prefix='fixed')
+        variable_form = BudgetForm(instance=variable_budget, prefix='variable')
+
+    return render(request, 'edit_budget.html', {
+        'fixed_form': fixed_form,
+        'variable_form': variable_form,
+    })
