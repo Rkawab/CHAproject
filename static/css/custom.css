@@ -19,3 +19,12 @@ h2 {
 .container {
     margin-top: 0.5rem;
 }
+
+
+/* 円グラフのサイズ制御 */
+.chart-wrapper {
+    max-width: 400px;
+    margin: 0 auto;
+    position: relative;
+    height: 300px; /* 必要に応じて調整 */
+}

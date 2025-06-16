@@ -63,19 +63,15 @@
     <div class="card-body">
         <h5 class="card-title mb-3">変動費の内訳</h5>
         {% if cost_item_totals %}
-        <ul class="list-group">
-            {% for item in cost_item_totals %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                {{ item.cost_item__name }}
-                <span class="badge bg-secondary rounded-pill">{{ item.total|intcomma }} 円</span>
-            </li>
-            {% endfor %}
-        </ul>
+            <div class="chart-wrapper">
+                <canvas id="costPieChart"></canvas>
+            </div>
         {% else %}
         <p class="text-muted">今月の出費データはありません。</p>
         {% endif %}
     </div>
 </div>
+
 
 <!-- 立替者ごとの合計と立替完了ボタン -->
 <div class="card shadow-sm mb-4">
@@ -99,5 +95,70 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+    {% if cost_item_totals %}
+        const ctx = document.getElementById('costPieChart').getContext('2d');
+
+        // ラベルとデータの準備
+        const labels = [
+        {% for item in cost_item_totals %}
+            "{{ item.cost_item__name }}",
+        {% endfor %}
+        ];
+
+        const data = [
+        {% for item in cost_item_totals %}
+            {{ item.total }},
+        {% endfor %}
+        ];
+
+        const backgroundColors = [
+            '#D93F3C', // 🔴 赤系（明るすぎず暗すぎず）
+            '#C49200', // 🟡 濃い黄金色（白文字も見やすい）
+            '#59A14F', // 🟢 緑系（中程度の明るさ）
+            '#4E79A7', // 🔵 青系（濃い青）
+            '#9C6ACF', // 🟣 紫系（中濃度ラベンダー寄り）
+            '#5A5A5A', // ⚫ 黒系（ダークグレー）
+        ];
+
+        new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+            data: data,
+            backgroundColor: backgroundColors,
+            borderColor: '#fff',
+            borderWidth: 2,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+            legend: {
+                position: 'bottom',
+            },
+            datalabels: {
+                color: '#fff',
+                font: {
+                weight: 'bold',
+                size: 12
+                },
+                anchor: 'end',   // 中心から離す
+                align: 'start',  // 外周に向けて揃える
+                offset: 10,      // ラベルを円から少し外へ
+                formatter: (value, context) => {
+                const label = context.chart.data.labels[context.dataIndex];
+                return label + "\n" + value.toLocaleString() + " 円";
+                }
+            }
+            }
+        },
+        plugins: [ChartDataLabels]
+        });
+    {% endif %}
+</script>
 
 {% endblock content %}
