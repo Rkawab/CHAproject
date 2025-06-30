@@ -19,16 +19,13 @@ def regist(request):
 
 # ユーザーを有効化するビュー
 def activate_user(request, token):
-    activate_form = forms.UserActivateForm(request.POST or None)    # request.POST or None：フォームのデータが送信されている場合 → request.POST をフォームに渡す
-    if activate_form.is_valid():
-        UserActivateToken.objects.activate_user_by_token(token)     # Userテーブルのtokenが一致した場所のis_activateをTrueにした
+    try:
+        UserActivateToken.objects.activate_user_by_token(token)
         messages.success(request, 'ユーザーを有効化しました')
-    activate_form.initial['token'] = token
-    return render(
-        request, 'accounts/activate_user.html', context={
-            'activate_form': activate_form,
-        }
-    )
+    except ValueError:
+        messages.error(request, '無効または期限切れのトークンです')
+
+    return render(request, 'accounts/activate_user.html')
 
 def user_login(request):
     login_form = forms.LoginForm(request.POST or None)

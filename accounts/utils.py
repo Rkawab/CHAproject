@@ -7,7 +7,7 @@ def send_activation_email(user, token):
     """
     ユーザー登録時に本登録用リンクをメール送信する関数
     """
-    activation_url = f'https://127.0.0.1:8000/accounts/activate_user/{token}'  # ← 本番ドメインに置き換える
+    activation_url = f'https://household-app-uxsi.onrender.com/accounts/activate_user/{token}'  # ← 本番ドメインに置き換える
     subject = '【家計簿アプリ】ユーザー本登録を完了してください'
     message = f'''
 {user.username}さん

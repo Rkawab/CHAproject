@@ -1,14 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
+<h2>アクティベート結果</h2>
 {% if messages %}
     {% for message in messages %}
-        <div>{{ message.message }}: {{ message.tags}}</div>
-        <!--ユーザーを有効化しました：success と表示される-->
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
     {% endfor %}
 {% endif %}
-<form method="POST">
-    {% csrf_token %}
-    {% include "includes/bootstrap_form.html" with form=activate_form %}
-    <input type="submit" value="ユーザーを有効化する" class="btn btn-outline-primary mb-2">
-</form><br>
+<a href="{% url 'accounts:user_login' %}" class="btn btn-primary">ログインページへ</a>
 {% endblock %}
