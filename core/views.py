@@ -39,7 +39,18 @@ def home(request):
     fixed_cost = FixedCost.objects.filter(year=year, month=month).first()
 
     total_fixed_cost = 0
+    total_amount = total_variable_cost  # 初期値として変動費だけ
     missing_fixed_items = []
+
+    # デフォルトの予算（固定費なしでも必要なため）
+    budgets = {b.category: b.amount for b in Budget.objects.all()}
+    fixed_budget = budgets.get('fixed', 0)
+    variable_budget = budgets.get('variable', 0)
+    total_budget = fixed_budget + variable_budget
+
+    remaining_fixed = fixed_budget
+    remaining_variable = variable_budget - total_variable_cost
+    remaining_total = total_budget - total_variable_cost
 
     if fixed_cost:
         # 項目とラベルの対応（順序あり）
