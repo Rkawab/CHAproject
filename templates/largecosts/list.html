@@ -16,6 +16,14 @@
 
 <a href="{% url 'largecosts:regist' %}" class="btn btn-outline-primary mb-2">新規追加</a>
 
+<!-- 合計金額の表示 -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <h5 class="card-title">この月の大型出費合計</h5>
+        <p class="card-text fs-4 fw-bold text-primary">{{ total_amount|intcomma }} 円</p>
+    </div>
+</div>
+
 
 <!-- 立替清算表示 -->
 {% if settlement_info %}

@@ -42,6 +42,20 @@
     </div>
   </div>
 
+  <!-- 円グラフ -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">内訳</h5>
+        {% if cost_item_totals %}
+        <div class="chart-wrapper" style="position: relative; height: 300px;">
+            <canvas id="costPieChart"></canvas>
+        </div>
+        {% else %}
+        <p class="text-muted">この月の固定費データはありません。</p>
+        {% endif %}
+    </div>
+  </div>
+
   <!-- モバイル表示 -->
   <div class="d-block d-md-none">
     {% for label, value, note in items %}
@@ -97,4 +111,76 @@
   </div>
 {% endif %}
 
+<script>
+    {% if cost_item_totals %}
+    const ctx = document.getElementById('costPieChart').getContext('2d');
+
+    const labels = [
+        {% for item in cost_item_totals %}
+            "{{ item.cost_item__name }}",
+        {% endfor %}
+    ];
+
+    const data = [
+        {% for item in cost_item_totals %}
+            {{ item.total }},
+        {% endfor %}
+    ];
+
+    const backgroundColors = [
+        '#D93F3C', // 赤系
+        '#C49200', // 黄色系（濃いゴールド）
+        '#59A14F', // 緑系
+        '#4E79A7', // 青系
+        '#9C6ACF', // 紫系
+        '#5A5A5A', // 黒系（ダークグレー）
+    ];
+
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: backgroundColors,
+                borderColor: '#fff',
+                borderWidth: 2,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                datalabels: {
+                    color: '#fff',
+                    font: {
+                        weight: 'bold',
+                        size: 12
+                    },
+                    anchor: 'end',
+                    align: 'start',
+                    offset: 10,
+                    formatter: (value, context) => {
+                        const label = context.chart.data.labels[context.dataIndex];
+                        return label + "\n" + value.toLocaleString() + " 円";
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed;
+                            return label + "\n" + value.toLocaleString() + " 円";
+                        }
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+    {% endif %}
+</script>
 {% endblock %}

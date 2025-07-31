@@ -72,6 +72,19 @@ def fixedcosts_list(request, year=None, month=None):
             ('ネット代', fixed_cost.internet, ''),
             ('サブスク代', fixed_cost.subscriptions, ''),
         ]
+        
+        # 円グラフ用のデータを作成（0円の項目は除外）
+        chart_data = []
+        for label, value, note in items:
+            if value and value > 0:
+                chart_data.append({
+                    'cost_item__name': label,
+                    'total': value
+                })
+
+    # chart_dataが定義されていない場合は空のリストにする
+    if 'chart_data' not in locals():
+        chart_data = []
 
     return render(request, 'fixedcosts/list.html', {
         'fixed_cost': fixed_cost,
@@ -86,6 +99,7 @@ def fixedcosts_list(request, year=None, month=None):
         'total_cost': total_cost,
         'adjusted_water': adjusted_water,
         'items': items,
+        'cost_item_totals': chart_data,  # 変動費と同じ変数名で円グラフを表示
     })
 
 @login_required
