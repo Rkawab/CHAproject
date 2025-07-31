@@ -66,17 +66,17 @@ def fixedcosts_list(request, year=None, month=None):
 
         items = [
             ('家賃', fixed_cost.rent, ''),
-            ('水道代', adjusted_water, ''),
-            ('電気代', fixed_cost.electricity, ''),
             ('ガス代', fixed_cost.gas, ''),
+            ('電気代', fixed_cost.electricity, ''),
             ('ネット代', fixed_cost.internet, ''),
+            ('水道代', adjusted_water, ''),
             ('サブスク代', fixed_cost.subscriptions, ''),
         ]
         
-        # 円グラフ用のデータを作成（0円の項目は除外）
+        # 円グラフ用のデータを作成（家賃と0円の項目は除外）
         chart_data = []
         for label, value, note in items:
-            if value and value > 0:
+            if value and value > 0 and label != '家賃':
                 chart_data.append({
                     'cost_item__name': label,
                     'total': value
