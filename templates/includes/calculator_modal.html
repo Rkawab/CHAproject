@@ -41,15 +41,29 @@
 
 <script>
 let calcExpression = '';
+let currentTargetId = null;
 
-function openCalculator() {
+function openCalculator(targetId = null) {
     calcExpression = '';
     document.getElementById('calcDisplay').value = '';
+    
+    // ターゲットIDを保存（変動費の場合はamount、固定費の場合は具体的なフィールドID）
+    if (targetId) {
+        currentTargetId = targetId;
+    } else {
+        // 変動費の場合、デフォルトでamountフィールドを探す
+        const amountField = document.querySelector('input[name="amount"]');
+        if (amountField) {
+            currentTargetId = amountField.id;
+        }
+    }
+    
     new bootstrap.Modal(document.getElementById('calculatorModal')).show();
 }
 
 function closeCalculator() {
     bootstrap.Modal.getInstance(document.getElementById('calculatorModal')).hide();
+    currentTargetId = null;
 }
 
 function appendCalc(val) {
@@ -65,7 +79,33 @@ function clearCalc() {
 function calculate() {
     try {
         const result = eval(calcExpression);
-        document.querySelector('input[name="amount"]').value = Math.floor(result);
+        
+        // 現在のターゲットフィールドに結果を設定
+        if (currentTargetId) {
+            const targetField = document.getElementById(currentTargetId);
+            if (targetField) {
+                targetField.value = Math.floor(result);
+            } else {
+                // IDで見つからない場合は、name属性で探してみる
+                const fieldByName = document.querySelector(`input[name="${currentTargetId}"]`);
+                if (fieldByName) {
+                    fieldByName.value = Math.floor(result);
+                } else {
+                    alert('対象のフィールドが見つかりません');
+                    return;
+                }
+            }
+        } else {
+            // フォールバック: 変動費のamountフィールドを探す
+            const amountField = document.querySelector('input[name="amount"]');
+            if (amountField) {
+                amountField.value = Math.floor(result);
+            } else {
+                alert('対象のフィールドが見つかりません');
+                return;
+            }
+        }
+        
         closeCalculator();
     } catch (e) {
         alert('計算式が正しくありません');
