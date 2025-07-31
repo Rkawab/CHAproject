@@ -24,8 +24,21 @@ def home(request):
     # 今月の出費額の合計
     total_variable_cost = monthly_entries.aggregate(total=Sum('amount'))['total'] or 0
 
-    # 費目ごとの合計
-    cost_item_totals = monthly_entries.values('cost_item__name').annotate(total=Sum('amount')).order_by('cost_item__id')
+    # 費目ごとの合計（「その他」を最後に表示）
+    cost_item_totals_raw = monthly_entries.values('cost_item__name', 'cost_item__id').annotate(total=Sum('amount')).order_by('cost_item__id')
+    
+    # Pythonで「その他」を最後に並び替え
+    cost_item_totals = []
+    other_item = None
+    for item in cost_item_totals_raw:
+        if item['cost_item__name'] == 'その他':
+            other_item = item
+        else:
+            cost_item_totals.append(item)
+    
+    # 「その他」を最後に追加
+    if other_item:
+        cost_item_totals.append(other_item)
 
     # 立替金額合計(全期間)
     payer_totals = VariableCost.objects.filter(payer__isnull=False)\

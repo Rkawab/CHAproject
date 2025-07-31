@@ -29,12 +29,25 @@ def variablecosts_list(request, year=None, month=None):
 
     # 合計額と費目ごとの合計を追加
     total_amount = entries.aggregate(total=Sum('amount'))['total'] or 0
-    # ※ここが修正点：cost_itemごとにまとめる（entriesではなくVariableCostから直接）
-    cost_item_totals = (VariableCost.objects
-                        .filter(purchase_date__range=(start_date, end_date))
-                        .values('cost_item__name')
-                        .annotate(total=Sum('amount'))
-                        .order_by('cost_item__id'))
+    # ※ここが修正点：cost_itemごとにまとめる（「その他」を最後に表示）
+    cost_item_totals_raw = (VariableCost.objects
+                            .filter(purchase_date__range=(start_date, end_date))
+                            .values('cost_item__name', 'cost_item__id')
+                            .annotate(total=Sum('amount'))
+                            .order_by('cost_item__id'))
+                            
+    # Pythonで「その他」を最後に並び替え
+    cost_item_totals = []
+    other_item = None
+    for item in cost_item_totals_raw:
+        if item['cost_item__name'] == 'その他':
+            other_item = item
+        else:
+            cost_item_totals.append(item)
+    
+    # 「その他」を最後に追加
+    if other_item:
+        cost_item_totals.append(other_item)
 
     # ナビゲーション用の前月・次月
     prev_month = (start_date - timedelta(days=1)).replace(day=1)
