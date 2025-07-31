@@ -137,7 +137,7 @@
     ];
 
     new Chart(ctx, {
-        type: 'pie',
+        type: 'doughnut',
         data: {
             labels: labels,
             datasets: [{
@@ -150,6 +150,7 @@
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            cutout: '40%', // ドーナツの穴のサイズ
             plugins: {
                 legend: {
                     position: 'bottom',
@@ -179,7 +180,46 @@
                 }
             }
         },
-        plugins: [ChartDataLabels]
+        plugins: [
+            ChartDataLabels,
+            {
+                id: 'centerText',
+                beforeDraw: function(chart) {
+                    const ctx = chart.ctx;
+                    const width = chart.width;
+                    const height = chart.height;
+                    
+                    // 合計金額を計算
+                    const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                    
+                    ctx.restore();
+                    
+                    // 基本フォントサイズ
+                    const baseFontSize = Math.min(width, height) / 16;
+                    ctx.textBaseline = 'middle';
+                    
+                    // 中央の座標を計算
+                    const centerX = width / 2;
+                    const centerY = height / 2;
+                    
+                    // 「家賃以外」ラベル（中央より明確に上側に配置）
+                    ctx.font = `${baseFontSize * 0.7}px Arial`;
+                    ctx.fillStyle = '#666';
+                    const labelText = '総額';
+                    const labelWidth = ctx.measureText(labelText).width;
+                    ctx.fillText(labelText, centerX - labelWidth / 2, centerY - baseFontSize * 2.0);
+                    
+                    // 合計金額（中央より少し上側に配置）
+                    ctx.font = `bold ${baseFontSize * 0.9}px Arial`;
+                    ctx.fillStyle = '#333';
+                    const totalText = total.toLocaleString() + '円';
+                    const totalWidth = ctx.measureText(totalText).width;
+                    ctx.fillText(totalText, centerX - totalWidth / 2, centerY - baseFontSize * 0.8);
+                    
+                    ctx.save();
+                }
+            }
+        ]
     });
     {% endif %}
 </script>
