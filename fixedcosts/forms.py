@@ -21,7 +21,7 @@ class FixedCostForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # インスタンスがなければ（新規作成時）、現在の年月をセット
         if not self.instance.pk:
-            today = timezone.now().date()
+            today = timezone.localdate()
             self.fields['year'].initial = today.year
             self.fields['month'].initial = today.month
 

@@ -21,7 +21,7 @@ class LargeCostForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if not self.instance.pk:
-            self.fields['purchase_date'].initial = timezone.now().date()
+            self.fields['purchase_date'].initial = timezone.localdate()
         
         # 費目の選択肢を「その他」を最後にする順序で設定
         self.fields['cost_item'].queryset = CostItem.objects.extra(

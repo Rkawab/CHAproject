@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.utils.timezone import now
+from django.utils import timezone
 from django.contrib import messages
 from variablecosts.models import VariableCost
 from django.db.models import Sum
@@ -15,7 +16,8 @@ from .forms import BudgetForm
 # ホーム画面を表示するビュー
 @login_required # ログインが成功した後でしか実行されないビュー
 def home(request):
-    today = now()
+    # ローカルタイムゾーン基準の日付で集計する
+    today = timezone.localdate()
     first_day = today.replace(day=1)
 
     # 今月の出費（購入日が今月のデータ）

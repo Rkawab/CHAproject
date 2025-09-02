@@ -5,11 +5,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import FixedCost
 from .forms import FixedCostForm
+from django.utils import timezone
 
 @login_required
 def fixedcosts_list(request, year=None, month=None):
     """固定費の月別一覧を表示"""
-    today = date.today()
+    today = timezone.localdate()
 
     # 年月が指定されていなければ、現在の年月を使用
     if year is None or month is None:
@@ -105,7 +106,7 @@ def fixedcosts_list(request, year=None, month=None):
 @login_required
 def fixedcosts_edit(request, year=None, month=None):
     """固定費の編集"""
-    today = date.today()
+    today = timezone.localdate()
     
     # 年月が指定されていなければ、現在の年月を使用
     if year is None or month is None:

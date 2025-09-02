@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import timedelta
 from calendar import monthrange
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -10,19 +10,20 @@ from core.models import Payer
 from .forms import LargeCostForm
 from decimal import Decimal  # 金額の精度対応のため
 from django.db.models.functions import Coalesce
+from django.utils import timezone
 
 
 
 
 @login_required
 def largecosts_list(request, year=None, month=None):
-    today = date.today()
+    today = timezone.localdate()
     if year is None or month is None:
         year = today.year
         month = today.month
-    start_date = date(year, month, 1)
+    start_date = today.replace(year=year, month=month, day=1)
     _, last_day = monthrange(year, month)
-    end_date = date(year, month, last_day)
+    end_date = start_date.replace(day=last_day)
 
     entries = LargeCost.objects.filter(purchase_date__range=(start_date, end_date)).order_by('purchase_date')
     total_amount = entries.aggregate(total=Sum('amount'))['total'] or 0
