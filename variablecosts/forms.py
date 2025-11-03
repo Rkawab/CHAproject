@@ -1,6 +1,6 @@
 from django import forms
 from .models import VariableCost
-from core.models import CostItem
+from core.models import CostItem, Payer
 from django.utils import timezone
 
 
@@ -25,6 +25,11 @@ class VariableCostForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if not self.instance.pk:
             self.fields['purchase_date'].initial = timezone.localdate()
+            # Set default payer to Ryo if available
+            try:
+                self.fields['payer'].initial = Payer.objects.get(name='Ryo')
+            except Payer.DoesNotExist:
+                pass
         
         # 費目の選択肢を「その他」を最後にする順序で設定
         self.fields['cost_item'].queryset = CostItem.objects.extra(
