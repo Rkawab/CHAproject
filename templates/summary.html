@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block content %}
+<h2 class="mb-4">集計ページ（直近12ヶ月）</h2>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h5 class="card-title mb-3">月別合計（固定費・変動費・大型費用）</h5>
+    <div class="chart-wrapper" style="position: relative; height: 340px;">
+      <canvas id="monthlyBar"></canvas>
+    </div>
+  </div>
+  <div class="card-footer text-muted small">
+    固定費は各月の入力から算出（未入力月は0）。
+  </div>
+  </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const monthlyCtx = document.getElementById('monthlyBar').getContext('2d');
+  const labels = {{ labels|safe }};
+  const fixedSeries = {{ fixed_series|safe }};
+  const variableSeries = {{ variable_series|safe }};
+  const largeSeries = {{ large_series|safe }};
+
+  new Chart(monthlyCtx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: '固定費',
+          data: fixedSeries,
+          backgroundColor: '#4E79A7'
+        },
+        {
+          label: '変動費',
+          data: variableSeries,
+          backgroundColor: '#59A14F'
+        },
+        {
+          label: '大型費用',
+          data: largeSeries,
+          backgroundColor: '#D93F3C'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              const v = ctx.parsed.y || 0;
+              return `${ctx.dataset.label}: ${v.toLocaleString()} 円`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { stacked: false },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) { return value.toLocaleString() + ' 円'; }
+          }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}
+

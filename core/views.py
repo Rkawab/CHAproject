@@ -10,6 +10,11 @@ from datetime import datetime
 from fixedcosts.models import FixedCost
 from collections import OrderedDict
 from .forms import BudgetForm
+from django.db.models.functions import TruncMonth
+from django.db.models import Sum
+from django.utils import timezone
+from datetime import date
+from largecosts.models import LargeCost
 
 
 
@@ -155,4 +160,74 @@ def edit_budget(request):
     return render(request, 'edit_budget.html', {
         'fixed_form': fixed_form,
         'variable_form': variable_form,
+    })
+
+@login_required
+def summary(request):
+    # Build last 12 months range (inclusive of current month)
+    today = timezone.localdate()
+    base_year = today.year
+    base_month = today.month
+
+    def y_m_offset(year: int, month: int, offset: int):
+        idx = (year * 12 + (month - 1)) + offset
+        y = idx // 12
+        m = idx % 12 + 1
+        return y, m
+
+    # List of labels like 'YYYY-MM' oldest -> newest
+    months = []
+    for i in range(-11, 1):
+        y, m = y_m_offset(base_year, base_month, i)
+        months.append((y, m))
+
+    labels = [f"{y:04d}-{m:02d}" for y, m in months]
+
+    # Variable costs monthly sums using TruncMonth
+    start_year, start_month = months[0]
+    end_year, end_month = months[-1]
+
+    start_date = date(start_year, start_month, 1)
+    # Next month after end
+    ny, nm = y_m_offset(end_year, end_month, 1)
+    if nm == 1:
+        next_month_after_end = date(ny, nm, 1)
+    else:
+        next_month_after_end = date(ny, nm, 1)
+
+    vc_qs = VariableCost.objects.filter(
+        purchase_date__gte=start_date,
+        purchase_date__lt=next_month_after_end,
+    ).annotate(mon=TruncMonth('purchase_date')).values('mon').annotate(total=Sum('amount'))
+
+    vc_map = {f"{rec['mon'].year:04d}-{rec['mon'].month:02d}": rec['total'] for rec in vc_qs}
+    variable_series = [int(vc_map.get(lab, 0) or 0) for lab in labels]
+
+    # Large costs monthly sums
+    lc_qs = LargeCost.objects.filter(
+        purchase_date__gte=start_date,
+        purchase_date__lt=next_month_after_end,
+    ).annotate(mon=TruncMonth('purchase_date')).values('mon').annotate(total=Sum('amount'))
+
+    lc_map = {f"{rec['mon'].year:04d}-{rec['mon'].month:02d}": rec['total'] for rec in lc_qs}
+    large_series = [int(lc_map.get(lab, 0) or 0) for lab in labels]
+
+    # Fixed costs monthly sums using model method get_total_cost per row
+    # Fetch all fixed cost rows in the year span and aggregate in Python
+    min_year = months[0][0]
+    max_year = months[-1][0]
+    fixed_rows = FixedCost.objects.filter(year__gte=min_year, year__lte=max_year)
+    fc_map = {}
+    for fc in fixed_rows:
+        key = f"{fc.year:04d}-{fc.month:02d}"
+        if key in labels:
+            fc_map[key] = fc_map.get(key, 0) + int(fc.get_total_cost() or 0)
+
+    fixed_series = [int(fc_map.get(lab, 0) or 0) for lab in labels]
+
+    return render(request, 'summary.html', {
+        'labels': labels,
+        'variable_series': variable_series,
+        'fixed_series': fixed_series,
+        'large_series': large_series,
     })
