@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import VariableCost
 from .forms import VariableCostForm
-from django.db.models import Sum, Min, Max
+from django.db.models import Sum, Min, Max  # 月選択プルダウン用に最小・最大日付を集計するため Min/Max を追加
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 
@@ -58,20 +58,22 @@ def variablecosts_list(request, year=None, month=None):
     if next_month > today.replace(day=1):
         next_month = None
 
-    # Build available months for dropdown (from first entry to latest, capped at today)
+    # 月選択プルダウンに表示する候補の生成
+    # ・DBに保存されている変動費データの中で最も古い日付〜最新の日付を取得
+    # ・最新は当月を超えないように制限（翌月ボタンと挙動を合わせる）
     agg = VariableCost.objects.aggregate(min_date=Min('purchase_date'), max_date=Max('purchase_date'))
     min_date = agg['min_date'] or start_date
     max_date = agg['max_date'] or start_date
     if max_date > today:
         max_date = today
 
-    # Normalize to first day of month
+    # 各月の1日へ正規化して、月単位のリストを組み立てる
     cur = min_date.replace(day=1)
     end = max_date.replace(day=1)
     available_months = []
-    # Ensure at least current context month is present
+    # 念のため無限ループ防止のガード（最大20年分）
     safe_guard = 0
-    while cur <= end and safe_guard < 240:  # cap loop to 20 years just in case
+    while cur <= end and safe_guard < 240:  # 念のため20年分に上限
         available_months.append({
             'year': cur.year,
             'month': cur.month,
@@ -82,6 +84,7 @@ def variablecosts_list(request, year=None, month=None):
             cur = cur.replace(month=cur.month + 1)
         safe_guard += 1
 
+    # データが全く無い場合でも、画面表示中の年月は少なくとも1件として候補に入れる
     if not available_months:
         available_months = [{
             'year': start_date.year,
