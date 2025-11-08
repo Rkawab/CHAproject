@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import VariableCost
 from .forms import VariableCostForm
-from django.db.models import Sum
+from django.db.models import Sum, Min, Max
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 
@@ -58,6 +58,36 @@ def variablecosts_list(request, year=None, month=None):
     if next_month > today.replace(day=1):
         next_month = None
 
+    # Build available months for dropdown (from first entry to latest, capped at today)
+    agg = VariableCost.objects.aggregate(min_date=Min('purchase_date'), max_date=Max('purchase_date'))
+    min_date = agg['min_date'] or start_date
+    max_date = agg['max_date'] or start_date
+    if max_date > today:
+        max_date = today
+
+    # Normalize to first day of month
+    cur = min_date.replace(day=1)
+    end = max_date.replace(day=1)
+    available_months = []
+    # Ensure at least current context month is present
+    safe_guard = 0
+    while cur <= end and safe_guard < 240:  # cap loop to 20 years just in case
+        available_months.append({
+            'year': cur.year,
+            'month': cur.month,
+        })
+        if cur.month == 12:
+            cur = cur.replace(year=cur.year + 1, month=1)
+        else:
+            cur = cur.replace(month=cur.month + 1)
+        safe_guard += 1
+
+    if not available_months:
+        available_months = [{
+            'year': start_date.year,
+            'month': start_date.month,
+        }]
+
     return render(request, 'variablecosts/list.html', {
         'entries': entries,
         'year': year,
@@ -66,6 +96,7 @@ def variablecosts_list(request, year=None, month=None):
         'next_month': next_month,
         'total_amount': total_amount,
         'cost_item_totals': cost_item_totals,
+        'available_months': available_months,
     })
 
 @login_required

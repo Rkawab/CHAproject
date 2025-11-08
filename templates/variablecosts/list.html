@@ -8,6 +8,14 @@
 <div class="mb-3 d-flex justify-content-between">
   <a href="{% url 'variablecosts:list_by_month' prev_month.year prev_month.month %}" class="btn btn-outline-secondary">← 前月</a>
 
+  <select class="form-select w-auto" onchange="if(this.value){ window.location.href=this.value; }" aria-label="月を選択">
+    {% for m in available_months %}
+      <option value="{% url 'variablecosts:list_by_month' m.year m.month %}" {% if m.year == year and m.month == month %}selected{% endif %}>
+        {{ m.year }}年{{ m.month }}月
+      </option>
+    {% endfor %}
+  </select>
+
   {% if next_month %}
     <a href="{% url 'variablecosts:list_by_month' next_month.year next_month.month %}" class="btn btn-outline-secondary">翌月 →</a>
   {% else %}
