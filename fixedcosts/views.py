@@ -37,6 +37,33 @@ def fixedcosts_list(request, year=None, month=None):
     # 前月・次月のデータ存在確認
     prev_exists = FixedCost.objects.filter(year=prev_year, month=prev_month).exists()
     next_exists = FixedCost.objects.filter(year=next_year, month=next_month).exists() if not future_limit else False
+
+    # 月選択プルダウンに表示する候補の生成
+    # ・FixedCostの最古(年/月)〜最新(年/月)を取得し、当月を上限にして月一覧を作成
+    fc_first = FixedCost.objects.order_by('year', 'month').first()
+    fc_last = FixedCost.objects.order_by('year', 'month').last()
+
+    available_months = []
+    if fc_first and fc_last:
+        start_y, start_m = fc_first.year, fc_first.month
+        end_y, end_m = fc_last.year, fc_last.month
+
+        # 当月を超える場合は当月を上限に
+        if (end_y, end_m) > (today.year, today.month):
+            end_y, end_m = today.year, today.month
+
+        cy, cm = start_y, start_m
+        safe_guard = 0  # 念のため20年(240ヶ月)で上限
+        while (cy, cm) <= (end_y, end_m) and safe_guard < 240:
+            available_months.append({'year': cy, 'month': cm})
+            if cm == 12:
+                cy, cm = cy + 1, 1
+            else:
+                cm += 1
+            safe_guard += 1
+    else:
+        # データが無い場合でも、表示中の年月を1件として候補に入れる
+        available_months = [{'year': year, 'month': month}]
     
     # 総固定費
     total_cost = fixed_cost.get_total_cost() if fixed_cost else 0
