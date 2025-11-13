@@ -20,17 +20,30 @@ h2 {
     margin-top: 0.5rem;
 }
 
-
-/* 円グラフのサイズ制御 */
+/* 共通 */
 .chart-wrapper {
-    width: 100%;
-    max-width: 100%;
     margin: 0 auto;
     position: relative;
-    min-height: 300px; /* 必要に応じて調整 */
 }
 
-.chart-wrapper canvas {
+/* 円グラフ用：元のようにコンパクトに */
+.chart-wrapper--pie {
+    max-width: 400px;      /* お好みで */
+    aspect-ratio: 1 / 1;   /* 正方形を維持（対応ブラウザなら） */
+}
+.chart-wrapper--pie canvas {
+    width: 100%;
+    height: 100%;
+}
+
+
+/* 棒グラフ用：画面幅いっぱい使う */
+.chart-wrapper--bar {
+    width: 100%;
+    max-width: 100%;
+    min-height: 300px;
+}
+.chart-wrapper--bar canvas {
     width: 100%;
     height: 100%;
 }
