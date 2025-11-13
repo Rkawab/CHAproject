@@ -4,23 +4,35 @@
 
 <h2 class="mb-4">固定費一覧（{{ year }}年{{ month }}月）</h2>
 
-<!-- 月移動ナビ -->
-<div class="mb-3 d-flex justify-content-between">
-  {% if prev_exists %}
-    <a href="{% url 'fixedcosts:list_by_month' prev_year prev_month %}" class="btn btn-outline-secondary">← 前月</a>
-  {% else %}
-    <a href="{% url 'fixedcosts:edit_by_month' prev_year prev_month %}" class="btn btn-outline-secondary">← 前月のデータを作成</a>
-  {% endif %}
-
-  {% if next_month %}
-    {% if next_exists %}
-      <a href="{% url 'fixedcosts:list_by_month' next_year next_month %}" class="btn btn-outline-secondary">翌月 →</a>
+<!-- 月移動バー -->
+<div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <div>
+    {% if prev_exists %}
+      <a href="{% url 'fixedcosts:list_by_month' prev_year prev_month %}" class="btn btn-outline-secondary">&lt;&lt; 前月</a>
     {% else %}
-      <a href="{% url 'fixedcosts:edit_by_month' next_year next_month %}" class="btn btn-outline-secondary">翌月のデータを作成</a>
+      <a href="{% url 'fixedcosts:edit_by_month' prev_year prev_month %}" class="btn btn-outline-secondary">&lt;&lt; 前月のデータを作成</a>
     {% endif %}
-  {% else %}
-    <button class="btn btn-outline-secondary" disabled>翌月 →</button>
-  {% endif %}
+  </div>
+
+  <select class="form-select w-auto" onchange="if(this.value){ window.location.href=this.value; }" aria-label="月を選択">
+    {% for m in available_months %}
+      <option value="{% url 'fixedcosts:list_by_month' m.year m.month %}" {% if m.year == year and m.month == month %}selected{% endif %}>
+        {{ m.year }}年{{ m.month }}月
+      </option>
+    {% endfor %}
+  </select>
+
+  <div>
+    {% if next_month %}
+      {% if next_exists %}
+        <a href="{% url 'fixedcosts:list_by_month' next_year next_month %}" class="btn btn-outline-secondary">翌月 &gt;&gt;</a>
+      {% else %}
+        <a href="{% url 'fixedcosts:edit_by_month' next_year next_month %}" class="btn btn-outline-secondary">翌月のデータを作成 &gt;&gt;</a>
+      {% endif %}
+    {% else %}
+      <button class="btn btn-outline-secondary" disabled>翌月 &gt;&gt;</button>
+    {% endif %}
+  </div>
 </div>
 
 <!-- 操作ボタン -->
@@ -37,7 +49,7 @@
   <!-- 合計 -->
   <div class="card mb-4 shadow-sm">
     <div class="card-body">
-      <h5 class="card-title">この月の固定費合計</h5>
+      <h5 class="card-title">今月の固定費合計</h5>
       <p class="card-text fs-4 fw-bold text-primary">{{ total_cost|intcomma }} 円</p>
     </div>
   </div>
@@ -51,7 +63,7 @@
             <canvas id="costPieChart"></canvas>
         </div>
         {% else %}
-        <p class="text-muted">この月の固定費データはありません。</p>
+        <p class="text-muted">今月の固定費データはまだありません。</p>
         {% endif %}
     </div>
   </div>
@@ -61,7 +73,7 @@
     {% for label, value, note in items %}
       <div class="card mb-3 shadow-sm">
         <div class="card-header bg-light">
-          <h6 class="mb-0">{{ label }}{% if label == "水道代" %} (半額にして反映){% endif %}</h6>
+          <h6 class="mb-0">{{ label }}{% if label == "水道代" %} (割り勘済み){% endif %}</h6>
         </div>
         <div class="card-body">
           <p class="card-text">
@@ -70,9 +82,8 @@
             {% elif value == 0 %}
               未入力
             {% else %}
-              未設定
+              未登録
             {% endif %}
-
           </p>
         </div>
       </div>
@@ -91,13 +102,13 @@
       <tbody>
         <tr><td>家賃</td><td class="text-end">{{ fixed_cost.rent|default:"-"|intcomma }} 円</td></tr>
         <tr>
-          <td>水道代{% if fixed_cost.water is not None  %} (半額にして計算){% elif adjusted_water > 0 %} (先月分を反映){% endif %}</td>
+          <td>水道代{% if fixed_cost.water is not None  %} (割り勘計算){% elif adjusted_water > 0 %} (前月から流用){% endif %}</td>
           <td class="text-end">{{ adjusted_water|default:"-"|intcomma }} 円</td>
         </tr>
         <tr><td>電気代</td><td class="text-end">{{ fixed_cost.electricity|default:"-"|intcomma }} 円</td></tr>
         <tr><td>ガス代</td><td class="text-end">{{ fixed_cost.gas|default:"-"|intcomma }} 円</td></tr>
         <tr><td>ネット代</td><td class="text-end">{{ fixed_cost.internet|default:"-"|intcomma }} 円</td></tr>
-        <tr><td>サブスク代</td><td class="text-end">{{ fixed_cost.subscriptions|default:"-"|intcomma }} 円</td></tr>
+        <tr><td>サブスク</td><td class="text-end">{{ fixed_cost.subscriptions|default:"-"|intcomma }} 円</td></tr>
         <tr class="table-secondary">
           <td class="fw-bold">合計</td>
           <td class="text-end fw-bold">{{ total_cost|intcomma }} 円</td>
@@ -107,7 +118,7 @@
   </div>
 {% else %}
   <div class="alert alert-info">
-    {{ year }}年{{ month }}月のデータはまだ登録されていません。「この月のデータを登録」ボタンから登録してください。
+    {{ year }}年{{ month }}月のデータはまだ登録されていません。「この月のデータを登録」ボタンから入力してください。
   </div>
 {% endif %}
 
@@ -128,12 +139,12 @@
     ];
 
     const backgroundColors = [
-        '#D93F3C', // ガス代：赤系
-        '#C49200', // 電気代：黄色系（濃いゴールド）
-        '#59A14F', // ネット代：緑系
-        '#4E79A7', // 水道代：青系
-        '#9C6ACF', // サブスク代：紫系
-        '#5A5A5A', // その他：黒系（ダークグレー）
+        '#D93F3C', // ガス
+        '#C49200', // 電気
+        '#59A14F', // ネット
+        '#4E79A7', // 水道
+        '#9C6ACF', // サブスク
+        '#5A5A5A', // その他
     ];
 
     new Chart(ctx, {
@@ -150,7 +161,7 @@
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '40%', // ドーナツの穴のサイズ
+            cutout: '40%',
             plugins: {
                 legend: {
                     position: 'bottom',
@@ -188,10 +199,7 @@
                     const ctx = chart.ctx;
                     const width = chart.width;
                     const height = chart.height;
-                    
-                    // 合計金額を計算
                     const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                    
                     ctx.restore();
                     
                     // 基本フォントサイズ

@@ -2,7 +2,7 @@ from datetime import timedelta
 from calendar import monthrange
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, Value
+from django.db.models import Sum, Value, Min, Max
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from .models import LargeCost
@@ -51,6 +51,26 @@ def largecosts_list(request, year=None, month=None):
     if next_month > today.replace(day=1):
         next_month = None
 
+    # 月選択プルダウン用の候補生成（最初の記録月〜最新月）
+    agg = LargeCost.objects.aggregate(min_date=Min('purchase_date'), max_date=Max('purchase_date'))
+    min_date = agg['min_date'] or start_date
+    max_date = agg['max_date'] or start_date
+
+    cur = min_date.replace(day=1)
+    end = max_date.replace(day=1)
+    available_months = []
+    safe_guard = 0  # 念のため20年分に制限
+    while cur <= end and safe_guard < 240:
+        available_months.append({'year': cur.year, 'month': cur.month})
+        if cur.month == 12:
+            cur = cur.replace(year=cur.year + 1, month=1)
+        else:
+            cur = cur.replace(month=cur.month + 1)
+        safe_guard += 1
+
+    if not available_months:
+        available_months = [{'year': start_date.year, 'month': start_date.month}]
+
     payers = list(Payer.objects.filter(name__isnull=False).values_list('name', flat=True))
 
     # 全期間のpayer別合計
@@ -98,6 +118,7 @@ def largecosts_list(request, year=None, month=None):
         'total_amount': total_amount,
         'cost_item_totals': cost_item_totals,
         'settlement_info': settlement_info,
+        'available_months': available_months,
     })
 
 @login_required

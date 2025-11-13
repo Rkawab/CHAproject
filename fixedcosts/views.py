@@ -128,6 +128,7 @@ def fixedcosts_list(request, year=None, month=None):
         'adjusted_water': adjusted_water,
         'items': items,
         'cost_item_totals': chart_data,  # 変動費と同じ変数名で円グラフを表示
+        'available_months': available_months,
     })
 
 @login_required
@@ -195,3 +196,4 @@ def fixedcosts_delete(request, year, month):
         'fixed_cost': fixed_cost,
         'cost_items': cost_items,
     })
+
