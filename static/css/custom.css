@@ -23,8 +23,14 @@ h2 {
 
 /* 円グラフのサイズ制御 */
 .chart-wrapper {
-    max-width: 400px;
+    width: 100%;
+    max-width: 100%;
     margin: 0 auto;
     position: relative;
-    height: 300px; /* 必要に応じて調整 */
+    min-height: 300px; /* 必要に応じて調整 */
+}
+
+.chart-wrapper canvas {
+    width: 100%;
+    height: 100%;
 }
