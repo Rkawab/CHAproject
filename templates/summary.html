@@ -2,31 +2,45 @@
 {% load humanize %}
 
 {% block content %}
-<h2 class="mb-4">集計ページ（直近12ヶ月）</h2>
+<h2 class="mb-4">集計データ（直近12ヶ月）</h2>
 
 <div class="card shadow-sm mb-4">
   <div class="card-body">
-    <h5 class="card-title mb-3">月別合計（固定費・変動費・大型費用）</h5>
+    <h5 class="card-title mb-3">固定費＋変動費</h5>
     <div class="chart-wrapper" style="position: relative; height: 340px;">
-      <canvas id="monthlyBar"></canvas>
+      <canvas id="fixedVariableBar"></canvas>
     </div>
   </div>
   <div class="card-footer text-muted small">
-    固定費は各月の入力から算出（未入力月は0）。
+    各月ごとの棒の下部に固定費、上部に変動費を重ねて表示します。
   </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h5 class="card-title mb-3">大型費用</h5>
+    <div class="chart-wrapper" style="position: relative; height: 300px;">
+      <canvas id="largeCostBar"></canvas>
+    </div>
   </div>
+  <div class="card-footer text-muted small">
+    不定期に発生する大型費用のみを切り出して確認できます。
+  </div>
+</div>
 
 {% endblock %}
 
 {% block extra_js %}
 <script>
-  const monthlyCtx = document.getElementById('monthlyBar').getContext('2d');
   const labels = {{ labels|safe }};
   const fixedSeries = {{ fixed_series|safe }};
   const variableSeries = {{ variable_series|safe }};
   const largeSeries = {{ large_series|safe }};
 
-  new Chart(monthlyCtx, {
+  const fixedVariableCtx = document.getElementById('fixedVariableBar').getContext('2d');
+  const largeCostCtx = document.getElementById('largeCostBar').getContext('2d');
+
+  new Chart(fixedVariableCtx, {
     type: 'bar',
     data: {
       labels: labels,
@@ -34,13 +48,50 @@
         {
           label: '固定費',
           data: fixedSeries,
-          backgroundColor: '#4E79A7'
+          backgroundColor: '#4E79A7',
+          stack: 'fixedVariableStack'
         },
         {
           label: '変動費',
           data: variableSeries,
-          backgroundColor: '#59A14F'
-        },
+          backgroundColor: '#59A14F',
+          stack: 'fixedVariableStack'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              const v = ctx.parsed.y || 0;
+              return `${ctx.dataset.label}: ${v.toLocaleString()} 円`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { stacked: true },
+        y: {
+          stacked: true,
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) { return value.toLocaleString() + ' 円'; }
+          }
+        }
+      }
+    }
+  });
+
+  new Chart(largeCostCtx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
         {
           label: '大型費用',
           data: largeSeries,
