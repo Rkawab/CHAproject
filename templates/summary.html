@@ -6,13 +6,13 @@
 
 <div class="card shadow-sm mb-4">
   <div class="card-body">
-    <h5 class="card-title mb-3">固定費＋変動費</h5>
+    <h5 class="card-title mb-3">生活費</h5>
     <div class="chart-wrapper" style="position: relative; height: 340px;">
       <canvas id="fixedVariableBar"></canvas>
     </div>
   </div>
   <div class="card-footer text-muted small">
-    各月ごとの棒の下部に固定費、上部に変動費を重ねて表示します。
+    直近1年間の生活費を表示します。
   </div>
 </div>
 
@@ -24,7 +24,7 @@
     </div>
   </div>
   <div class="card-footer text-muted small">
-    不定期に発生する大型費用のみを切り出して確認できます。
+    直近1年間で不定期に発生した大型費用を表示します。
   </div>
 </div>
 
@@ -36,14 +36,31 @@
   const fixedSeries = {{ fixed_series|safe }};
   const variableSeries = {{ variable_series|safe }};
   const largeSeries = {{ large_series|safe }};
-
+  const currentYear = {{ current_year }};
   const fixedVariableCtx = document.getElementById('fixedVariableBar').getContext('2d');
   const largeCostCtx = document.getElementById('largeCostBar').getContext('2d');
+
+    // 表示用のラベルに変換
+  const displayLabels = labels.map((l) => {
+    const [yStr, mStr] = l.split("-");
+    const y = parseInt(yStr, 10);
+    const m = parseInt(mStr, 10);
+
+    if (y === currentYear) {
+      // 今年 → 「11」みたいに月だけ
+      return String(m);
+    } else {
+      // 去年以前 → 「24/12」みたいに西暦下2桁＋月
+      return "'" + m;
+      // 例: 2024-12 → "24/12"
+    }
+  });
+
 
   new Chart(fixedVariableCtx, {
     type: 'bar',
     data: {
-      labels: labels,
+      labels: displayLabels,
       datasets: [
         {
           label: '固定費',
@@ -80,6 +97,7 @@
           stacked: true,
           beginAtZero: true,
           ticks: {
+            stepSize: 20000,
             callback: function(value) { return value.toLocaleString() + ' 円'; }
           }
         }
@@ -90,7 +108,7 @@
   new Chart(largeCostCtx, {
     type: 'bar',
     data: {
-      labels: labels,
+      labels: displayLabels,
       datasets: [
         {
           label: '大型費用',
@@ -119,6 +137,7 @@
         y: {
           beginAtZero: true,
           ticks: {
+            stepSize: 20000,
             callback: function(value) { return value.toLocaleString() + ' 円'; }
           }
         }

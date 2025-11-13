@@ -230,4 +230,5 @@ def summary(request):
         'variable_series': variable_series,
         'fixed_series': fixed_series,
         'large_series': large_series,
+        'current_year': base_year,
     })
