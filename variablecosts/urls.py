@@ -12,4 +12,5 @@ urlpatterns = [
     path('edit/<int:pk>/', views.variablecosts_edit, name='edit'),
     path('delete/<int:pk>/', views.variablecosts_delete, name='delete'),
     path('clear_payer/<str:payer_name>/', views.clear_payer, name='clear_payer'),
+    path('scan-receipt/', views.scan_receipt, name='scan_receipt'),
 ]

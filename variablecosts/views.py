@@ -1,5 +1,6 @@
 from datetime import timedelta
 from calendar import monthrange
+from django.http import JsonResponse
 from django.utils import timezone
 from django.utils.timezone import make_aware
 from django.shortcuts import render, redirect, get_object_or_404
@@ -9,6 +10,7 @@ from .forms import VariableCostForm
 from django.db.models import Sum, Min, Max  # 月選択プルダウン用に最小・最大日付を集計するため Min/Max を追加
 from django.contrib import messages
 from django.views.decorators.http import require_POST
+from .receipt_reader import ReceiptReadError, extract_total_amount
 
 
 @login_required
@@ -145,3 +147,27 @@ def clear_payer(request, payer_name):
     updated_count = VariableCost.objects.filter(payer__name=payer_name).update(payer=None)
     messages.success(request, f"{payer_name} さんの立替データ（{updated_count}件）をクリアしました。")
     return redirect('core:home')
+
+@login_required
+@require_POST
+def scan_receipt(request):
+    """
+    レシート画像を受け取り、合計金額だけをJSONで返すAPI。
+    画像はDBやストレージには保存しない。
+    """
+    image_file = request.FILES.get("receipt_image")
+    if not image_file:
+        return JsonResponse({"error": "レシート画像が選択されていません。"}, status=400)
+
+    try:
+        amount = extract_total_amount(image_file)
+    except ReceiptReadError as e:
+        return JsonResponse({"error": str(e)}, status=400)
+    except Exception:
+        # 予期しないエラーはざっくり握る
+        return JsonResponse(
+            {"error": "レシートの読み取り中にエラーが発生しました。"},
+            status=500,
+        )
+
+    return JsonResponse({"amount": amount})

@@ -8,18 +8,33 @@
     <h2 class="my-3">購入品の新規登録</h2>
 {% endif %}
 
-<form method="post" class="needs-validation" novalidate>
+<form method="post" class="needs-validation" novalidate enctype="multipart/form-data">
     {% csrf_token %}
 
     {% include "includes/bootstrap_field.html" with field=form.purchase_date %}
     
-    <div class="mb-3">
-        <label for="{{ form.amount.id_for_label }}" class="form-label">{{ form.amount.label }}</label>
-        <div class="input-group">
-            {% render_field form.amount class="form-control" %}
-            <button type="button" class="btn btn-outline-secondary" onclick="openCalculator()">電卓</button>
+        <div class="mb-3">
+            <label for="{{ form.amount.id_for_label }}" class="form-label">{{ form.amount.label }}</label>
+            <div class="input-group">
+                {% render_field form.amount class="form-control" %}
+                <button type="button" class="btn btn-outline-secondary" onclick="openCalculator()">電卓</button>
+
+                <!-- ★レシート読み取りボタン -->
+                <button type="button" class="btn btn-outline-secondary" id="scan-receipt-btn">
+                    レシート読み取り
+                </button>
+            </div>
+
+            <!-- ★カメラ/画像用の隠し input -->
+            <input
+                type="file"
+                id="receipt-input"
+                accept="image/*"
+                capture="environment"
+                style="display: none;"
+            >
         </div>
-    </div>
+
 
     {% include "includes/bootstrap_field.html" with field=form.cost_item %}
     {% include "includes/bootstrap_field.html" with field=form.description %}
@@ -37,5 +52,59 @@
 <a href="{% url 'variablecosts:list' %}" class="btn btn-outline-secondary mb-2">一覧に戻る</a><br>
 
 {% include "includes/calculator_modal.html" %}
+
+<script>
+    (function () {
+        const scanBtn = document.getElementById("scan-receipt-btn");
+        const fileInput = document.getElementById("receipt-input");
+        const amountInput = document.getElementById("id_amount");  // Djangoデフォルトのid
+
+        if (!scanBtn || !fileInput || !amountInput) {
+            return;
+        }
+
+        function getCsrfToken() {
+            const input = document.querySelector("input[name='csrfmiddlewaretoken']");
+            return input ? input.value : "";
+        }
+
+        // ボタン → ファイル選択（カメラ）を開く
+        scanBtn.addEventListener("click", function () {
+            fileInput.click();
+        });
+
+        // 画像が選択されたらAPIに送信
+        fileInput.addEventListener("change", function () {
+            if (!fileInput.files.length) return;
+
+            const formData = new FormData();
+            formData.append("receipt_image", fileInput.files[0]);
+
+            fetch("{% url 'variablecosts:scan_receipt' %}", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-CSRFToken": getCsrfToken(),
+                },
+            })
+                .then((res) => res.json())
+                .then((data) => {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+                    if (data.amount) {
+                        amountInput.value = data.amount;
+                    } else {
+                        alert("金額を読み取れませんでした。");
+                    }
+                })
+                .catch(() => {
+                    alert("レシートの読み取り中にエラーが発生しました。");
+                });
+        });
+    })();
+</script>
+
 
 {% endblock %}
