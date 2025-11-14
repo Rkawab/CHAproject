@@ -5,9 +5,8 @@ import json
 from mimetypes import guess_type
 from typing import BinaryIO
 
-from openai import OpenAI  # pip install --upgrade openai
-
-client = OpenAI()  # OPENAI_API_KEY を環境変数から読み込む
+from django.conf import settings          # ★ 追加
+from openai import OpenAI                 # pip install --upgrade openai
 
 
 class ReceiptReadError(Exception):
@@ -15,15 +14,17 @@ class ReceiptReadError(Exception):
     pass
 
 
+# ★ settings からキーを使ってクライアント生成
+client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+
 def _file_to_data_url(image_file: BinaryIO) -> str:
     """
     DjangoのUploadedFile (InMemoryUploadedFile / TemporaryUploadedFile) などを
     data:image/...;base64,xxxxx 形式の data URL に変換する。
     """
-    # ファイル全体を読み込む（この後は image_file はもう使わない前提）
     data = image_file.read()
 
-    # MIMEタイプを推定
     mime_type = getattr(image_file, "content_type", None)
     if not mime_type:
         mime_type, _ = guess_type(getattr(image_file, "name", ""))
@@ -69,7 +70,7 @@ def extract_total_amount(image_file: BinaryIO) -> int:
                             "type": "image_url",
                             "image_url": {
                                 "url": data_url,
-                                "detail": "low",  # speed / コスト優先。精度重視なら "high"
+                                "detail": "low",
                             },
                         },
                     ],

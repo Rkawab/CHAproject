@@ -1,7 +1,5 @@
 from pathlib import Path
 import os
-import dj_database_url
-# 開発用にデータベースを読み取る際に必要
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -16,6 +14,8 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]  # ← これがないと 
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY", "dummy-development-secret")
+
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -168,3 +168,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+# OpenAI の API キー
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
