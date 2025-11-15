@@ -10,7 +10,8 @@ from .forms import VariableCostForm
 from django.db.models import Sum, Min, Max  # 月選択プルダウン用に最小・最大日付を集計するため Min/Max を追加
 from django.contrib import messages
 from django.views.decorators.http import require_POST
-from .receipt_reader import ReceiptReadError, extract_total_amount
+from .receipt_reader import ReceiptReadError, extract_receipt_info
+from core.models import CostItem
 
 
 @login_required
@@ -152,22 +153,43 @@ def clear_payer(request, payer_name):
 @require_POST
 def scan_receipt(request):
     """
-    レシート画像を受け取り、合計金額だけをJSONで返すAPI。
-    画像はDBやストレージには保存しない。
+    レシート画像を受け取り、
+    金額・購入日・費目候補・名称を JSON で返す API。
     """
     image_file = request.FILES.get("receipt_image")
     if not image_file:
         return JsonResponse({"error": "レシート画像が選択されていません。"}, status=400)
 
     try:
-        amount = extract_total_amount(image_file)
+        info = extract_receipt_info(image_file)
     except ReceiptReadError as e:
         return JsonResponse({"error": str(e)}, status=400)
     except Exception:
-        # 予期しないエラーはざっくり握る
         return JsonResponse(
             {"error": "レシートの読み取り中にエラーが発生しました。"},
             status=500,
         )
 
-    return JsonResponse({"amount": amount})
+    amount = info["amount"]
+    purchase_date = info["purchase_date"]
+    raw_category = info["raw_category"]
+    description = info["description"]
+
+    # raw_category から CostItem を引く（名前マッチ）
+    cost_item = CostItem.objects.filter(name=raw_category).first()
+    if cost_item is None:
+        # 万一該当なしなら「その他」にフォールバック
+        cost_item = CostItem.objects.filter(name="その他").first()
+
+    response_data = {
+        "amount": amount,
+        "purchase_date": purchase_date,
+        "description": description,
+    }
+
+    if cost_item is not None:
+        response_data["cost_item_id"] = cost_item.id
+        response_data["cost_item_name"] = cost_item.name
+
+    # payer はここでは触らない（フォーム初期値を維持）
+    return JsonResponse(response_data)

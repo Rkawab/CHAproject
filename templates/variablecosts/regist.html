@@ -57,54 +57,82 @@
     (function () {
         const scanBtn = document.getElementById("scan-receipt-btn");
         const fileInput = document.getElementById("receipt-input");
-        const amountInput = document.getElementById("id_amount");  // Djangoデフォルトのid
+        const amountInput = document.getElementById("id_amount");            // 金額
+        const dateInput = document.getElementById("id_purchase_date");       // 購入日
+        const costItemSelect = document.getElementById("id_cost_item");      // 費目
+        const descriptionInput = document.getElementById("id_description");  // 名称
+        const csrfTokenInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
 
-        if (!scanBtn || !fileInput || !amountInput) {
+        if (!scanBtn || !fileInput || !amountInput || !csrfTokenInput) {
             return;
         }
 
-        function getCsrfToken() {
-            const input = document.querySelector("input[name='csrfmiddlewaretoken']");
-            return input ? input.value : "";
-        }
+        const csrfToken = csrfTokenInput.value;
 
-        // ボタン → ファイル選択（カメラ）を開く
+        // ボタン押下でカメラ / 画像選択を開く
         scanBtn.addEventListener("click", function () {
             fileInput.click();
         });
 
-        // 画像が選択されたらAPIに送信
+        // 画像選択後にAPIへ送信
         fileInput.addEventListener("change", function () {
-            if (!fileInput.files.length) return;
+            const file = fileInput.files[0];
+            if (!file) return;
 
             const formData = new FormData();
-            formData.append("receipt_image", fileInput.files[0]);
+            formData.append("receipt_image", file);
+
+            scanBtn.disabled = true;
+            const originalText = scanBtn.textContent;
+            scanBtn.textContent = "読み取り中...";
 
             fetch("{% url 'variablecosts:scan_receipt' %}", {
                 method: "POST",
-                body: formData,
                 headers: {
-                    "X-CSRFToken": getCsrfToken(),
+                    "X-CSRFToken": csrfToken,
                 },
+                body: formData,
             })
-                .then((res) => res.json())
-                .then((data) => {
-                    if (data.error) {
-                        alert(data.error);
-                        return;
-                    }
-                    if (data.amount) {
-                        amountInput.value = data.amount;
-                    } else {
-                        alert("金額を読み取れませんでした。");
-                    }
-                })
-                .catch(() => {
-                    alert("レシートの読み取り中にエラーが発生しました。");
-                });
+            .then(async (response) => {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || "レシートの読み取りに失敗しました。");
+                }
+                return data;
+            })
+            .then((data) => {
+                // 金額
+                if (data.amount !== undefined && data.amount !== null) {
+                    amountInput.value = data.amount;
+                }
+                // 購入日 (YYYY-MM-DD)
+                if (data.purchase_date && dateInput) {
+                    dateInput.value = data.purchase_date;
+                }
+                // 名称
+                if (data.description && descriptionInput) {
+                    descriptionInput.value = data.description;
+                }
+                // 費目 (select の value に id を入れる)
+                if (data.cost_item_id && costItemSelect) {
+                    costItemSelect.value = data.cost_item_id;
+                }
+
+                alert("レシートの読み取りが完了しました。");
+            })
+            .catch((err) => {
+                console.error(err);
+                alert(err.message || "レシートの読み取り中にエラーが発生しました。");
+            })
+            .finally(() => {
+                scanBtn.disabled = false;
+                scanBtn.textContent = originalText;
+                fileInput.value = ""; // 同じ画像を選び直せるようにクリア
+            });
         });
     })();
 </script>
+
 
 
 {% endblock %}
