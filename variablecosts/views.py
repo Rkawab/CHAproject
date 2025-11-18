@@ -10,7 +10,7 @@ from .forms import VariableCostForm
 from django.db.models import Sum, Min, Max  # 月選択プルダウン用に最小・最大日付を集計するため Min/Max を追加
 from django.contrib import messages
 from django.views.decorators.http import require_POST
-from .receipt_reader import ReceiptReadError, extract_receipt_info
+from core.receipt_reader import ReceiptReadError, extract_receipt_info
 from core.models import CostItem
 
 

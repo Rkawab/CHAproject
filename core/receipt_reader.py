@@ -1,4 +1,4 @@
-# variablecosts/receipt_reader.py
+# core/receipt_reader.py
 
 import base64
 import json
@@ -36,7 +36,7 @@ def _file_to_data_url(image_file: BinaryIO) -> str:
 
 def extract_receipt_info(image_file: BinaryIO) -> dict:
     """
-    レシート画像から以下の情報を取得して返すメイン関数（これ1本に統一）:
+    レシート画像から以下の情報を取得して返すメイン関数:
 
     戻り値の dict 例:
     {

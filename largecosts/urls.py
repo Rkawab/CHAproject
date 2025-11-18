@@ -10,4 +10,5 @@ urlpatterns = [
     path('edit/<int:pk>/', views.largecosts_edit, name='edit'),
     path('delete/<int:pk>/', views.largecosts_delete, name='delete'),
     path('clear_settlement/', views.clear_settlement, name='clear_settlement'),
+    path('scan-receipt/', views.scan_receipt, name='scan_receipt'),
 ]

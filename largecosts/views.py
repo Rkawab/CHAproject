@@ -5,12 +5,14 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Value, Min, Max
 from django.contrib import messages
 from django.views.decorators.http import require_POST
+from django.http import JsonResponse
 from .models import LargeCost
-from core.models import Payer
+from core.models import Payer, CostItem
 from .forms import LargeCostForm
 from decimal import Decimal  # 金額の精度対応のため
 from django.db.models.functions import Coalesce
 from django.utils import timezone
+from core.receipt_reader import ReceiptReadError, extract_receipt_info
 
 
 
@@ -158,3 +160,49 @@ def clear_settlement(request):
     updated_count = LargeCost.objects.filter(payer__isnull=False).update(payer=None)
     messages.success(request, f"立替データ（{updated_count}件）をクリアしました。")
     return redirect('largecosts:list')
+
+
+@login_required
+@require_POST
+def scan_receipt(request):
+    """
+    レシート画像を受け取り、
+    金額・購入日・費目候補・名称を JSON で返す API（大型費用用）。
+    """
+    image_file = request.FILES.get("receipt_image")
+    if not image_file:
+        return JsonResponse({"error": "レシート画像が選択されていません。"}, status=400)
+
+    try:
+        info = extract_receipt_info(image_file)
+    except ReceiptReadError as e:
+        return JsonResponse({"error": str(e)}, status=400)
+    except Exception:
+        return JsonResponse(
+            {"error": "レシートの読み取り中にエラーが発生しました。"},
+            status=500,
+        )
+
+    amount = info["amount"]
+    purchase_date = info["purchase_date"]
+    raw_category = info["raw_category"]
+    description = info["description"]
+
+    # raw_category から CostItem を引く（名前マッチ）
+    cost_item = CostItem.objects.filter(name=raw_category).first()
+    if cost_item is None:
+        # 万一該当なしなら「その他」にフォールバック
+        cost_item = CostItem.objects.filter(name="その他").first()
+
+    response_data = {
+        "amount": amount,
+        "purchase_date": purchase_date,
+        "description": description,
+    }
+
+    if cost_item is not None:
+        response_data["cost_item_id"] = cost_item.id
+        response_data["cost_item_name"] = cost_item.name
+
+    # payer はここでは触らない（フォーム初期値を維持）
+    return JsonResponse(response_data)
