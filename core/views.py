@@ -61,6 +61,8 @@ def home(request):
     total_fixed_cost = 0
     total_amount = total_variable_cost  # 初期値として変動費だけ
     missing_fixed_items = []
+    rent_value = 0
+    total_amount_without_rent = total_amount  # 固定費が無いなら=変動費合計
 
     # デフォルトの予算（固定費なしでも必要なため）
     budgets = {b.category: b.amount for b in Budget.objects.all()}
@@ -119,6 +121,9 @@ def home(request):
         remaining_variable = variable_budget - total_variable_cost
         remaining_total = total_budget - total_amount
 
+        # 家賃と家賃を除いた合計金額
+        rent_value = fixed_cost.rent if fixed_cost.rent is not None else 0
+        total_amount_without_rent = total_amount - rent_value
 
     return render(request, 'home.html', {
         'total_amount': total_amount,
@@ -135,6 +140,8 @@ def home(request):
         'remaining_total': remaining_total,
         'year': year,
         'month': month,
+        'rent_value': rent_value,
+        'total_amount_without_rent': total_amount_without_rent,
     })
         # render(リクエスト情報, 表示するテンプレート, {HTMLで使用するデータ})
 
@@ -218,12 +225,36 @@ def summary(request):
     max_year = months[-1][0]
     fixed_rows = FixedCost.objects.filter(year__gte=min_year, year__lte=max_year)
     fc_map = {}
+    rent_map = {}
     for fc in fixed_rows:
         key = f"{fc.year:04d}-{fc.month:02d}"
         if key in labels:
             fc_map[key] = fc_map.get(key, 0) + int(fc.get_total_cost() or 0)
+            rent_map[key] = int(fc.rent or 0)
 
     fixed_series = [int(fc_map.get(lab, 0) or 0) for lab in labels]
+    rent_series = [int(rent_map.get(lab, 0) or 0) for lab in labels]
+
+    # 家賃以外 = 変動費 + 固定費 - 家賃（念のためマイナスは0に丸め）
+    total_without_rent_series = [
+        max(0, int(v) + int(f) - int(r))
+        for v, f, r in zip(variable_series, fixed_series, rent_series)
+    ]
+
+    # 家賃情報を取得
+    rent_value = 0
+    current_key = labels[-1]  # 今月の "YYYY-MM"
+    fc = FixedCost.objects.filter(year=base_year, month=base_month).first()
+    if fc and fc.rent is not None:
+        rent_value = int(fc.rent)
+
+    # 今月の合計（seriesの末尾が今月）
+    current_variable = int(variable_series[-1] or 0)
+    current_fixed = int(fixed_series[-1] or 0)
+
+    non_rent_value = current_variable + current_fixed - rent_value
+    if non_rent_value < 0:
+        non_rent_value = 0
 
     return render(request, 'summary.html', {
         'labels': labels,
@@ -231,4 +262,6 @@ def summary(request):
         'fixed_series': fixed_series,
         'large_series': large_series,
         'current_year': base_year,
+        'rent_series': rent_series,
+        'total_without_rent_series': total_without_rent_series,
     })

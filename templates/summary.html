@@ -28,6 +28,18 @@
   </div>
 </div>
 
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h5 class="card-title mb-3">費用分担</h5>
+    <div class="chart-wrapper chart-wrapper--bar" style="position: relative; height: 300px;">
+      <canvas id="rentWithoutBar"></canvas>
+    </div>
+  </div>
+  <div class="card-footer text-muted small">
+    直近1年間で家賃とそれ以外で分けた情報を表示します。
+  </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -36,9 +48,12 @@
   const fixedSeries = {{ fixed_series|safe }};
   const variableSeries = {{ variable_series|safe }};
   const largeSeries = {{ large_series|safe }};
+  const rentSeries = {{ rent_series|safe }};
+  const withoutrentSeries = {{ total_without_rent_series|safe }};
   const currentYear = {{ current_year }};
   const fixedVariableCtx = document.getElementById('fixedVariableBar').getContext('2d');
   const largeCostCtx = document.getElementById('largeCostBar').getContext('2d');
+  const RentWithoutCtx = document.getElementById('rentWithoutBar').getContext('2d');
 
     // 表示用のラベルに変換
   const displayLabels = labels.map((l) => {
@@ -92,7 +107,14 @@
         }
       },
       scales: {
-        x: { stacked: true },
+        x: {
+          stacked: true,
+          ticks: {
+            autoSkip: false,      // ← これで省略しない
+            maxRotation: 0,
+            minRotation: 0,
+          }
+        },
         y: {
           stacked: true,
           beginAtZero: true,
@@ -133,8 +155,70 @@
         }
       },
       scales: {
-        x: { stacked: false },
+        x: {
+          stacked: true,
+          ticks: {
+            autoSkip: false,      // ← これで省略しない
+            maxRotation: 0,
+            minRotation: 0,
+          }
+        },
         y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 20000,
+            callback: function(value) { return value.toLocaleString() + ' 円'; }
+          }
+        }
+      }
+    }
+  });
+
+  new Chart(RentWithoutCtx, {
+    type: 'bar',
+    data: {
+      labels: displayLabels,
+      datasets: [
+        {
+          label: '夫(家賃以外)',
+          data: withoutrentSeries,
+          backgroundColor: '#1fb6caff',
+          stack: 'withoutrentStack'
+        },
+        {
+          label: '妻(家賃)',
+          data: rentSeries,
+          backgroundColor: '#da1a1aff',
+          stack: 'rentStack'
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              const v = ctx.parsed.y || 0;
+              return `${ctx.dataset.label}: ${v.toLocaleString()} 円`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          ticks: {
+            autoSkip: false,      // ← これで省略しない
+            maxRotation: 0,
+            minRotation: 0,
+          }
+        },
+        y: {
+          stacked: true,
           beginAtZero: true,
           ticks: {
             stepSize: 20000,
