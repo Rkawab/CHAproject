@@ -49,3 +49,46 @@ class Budget(models.Model):
 
     def __str__(self):
         return f"{self.get_category_display()}：{self.amount}円"
+
+class CreditCard(models.Model):
+    """クレジットカード情報"""
+    name = models.CharField("クレカ名", max_length=50)
+    owner = models.ForeignKey(
+        "core.Payer",
+        verbose_name="所有者",
+        on_delete=models.PROTECT,
+        related_name="credit_cards",
+    )
+    note = models.CharField("メモ", max_length=100, blank=True, default="")
+
+    class Meta:
+        db_table = "credit_card"
+        unique_together = ("name", "owner")
+        ordering = ["owner__name", "name"]
+
+    def __str__(self):
+        return f"{self.name} - {self.owner.name}"
+
+
+class PaymentItem(models.Model):
+    """固定費支払いの控え（費用名 → クレカ）"""
+    name = models.CharField("費用名", max_length=50, unique=True)
+    card = models.ForeignKey(
+        CreditCard,
+        verbose_name="クレカ",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="payment_items",
+    )
+    memo = models.CharField("メモ", max_length=100, blank=True, default="")
+    sort_order = models.PositiveIntegerField("表示順", default=0)
+
+    class Meta:
+        db_table = "payment_item"
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        if self.card_id:
+            return f"{self.name} -> {self.card}"
+        return f"{self.name} (未設定)"

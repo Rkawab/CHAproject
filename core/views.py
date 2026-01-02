@@ -3,16 +3,15 @@ from django.contrib.auth.decorators import login_required
 from django.utils.timezone import now
 from django.utils import timezone
 from django.contrib import messages
+from django.urls import reverse
 from variablecosts.models import VariableCost
 from django.db.models import Sum
-from core.models import Budget
-from datetime import datetime
+from .models import Budget, CreditCard, PaymentItem
 from fixedcosts.models import FixedCost
 from collections import OrderedDict
-from .forms import BudgetForm
+from .forms import BudgetForm, CreditCardForm, PaymentItemForm
 from django.db.models.functions import TruncMonth
 from django.db.models import Sum
-from django.utils import timezone
 from datetime import date
 from largecosts.models import LargeCost
 
@@ -264,4 +263,81 @@ def summary(request):
         'current_year': base_year,
         'rent_series': rent_series,
         'total_without_rent_series': total_without_rent_series,
+    })
+
+
+# 費用とクレジットの設定
+@login_required
+def payment_settings(request):
+    cards = CreditCard.objects.select_related("owner").all()
+    items = PaymentItem.objects.select_related("card", "card__owner").all()
+    return render(request, "payment_settings.html", {
+        "cards": cards,
+        "items": items,
+    })
+
+# --- CreditCard CRUD ---
+@login_required
+def creditcard_create(request):
+    form = CreditCardForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "クレカを追加しました。")
+        return redirect("core:payment_settings")
+    return render(request, "payment_form.html", {"title": "クレカ追加", "form": form})
+
+@login_required
+def creditcard_edit(request, pk):
+    obj = get_object_or_404(CreditCard, pk=pk)
+    form = CreditCardForm(request.POST or None, instance=obj)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "クレカを更新しました。")
+        return redirect("core:payment_settings")
+    return render(request, "payment_form.html", {"title": "クレカ編集", "form": form})
+
+@login_required
+def creditcard_delete(request, pk):
+    obj = get_object_or_404(CreditCard, pk=pk)
+    if request.method == "POST":
+        obj.delete()
+        messages.success(request, "クレカを削除しました。")
+        return redirect("core:payment_settings")
+    return render(request, "payment_delete_confirm.html", {
+        "title": "クレカ削除",
+        "object": obj,
+        "back_url": reverse("core:payment_settings"),
+    })
+
+# --- PaymentItem CRUD ---
+@login_required
+def paymentitem_create(request):
+    form = PaymentItemForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "支払い項目を追加しました。")
+        return redirect("core:payment_settings")
+    return render(request, "payment_form.html", {"title": "支払い項目追加", "form": form})
+
+@login_required
+def paymentitem_edit(request, pk):
+    obj = get_object_or_404(PaymentItem, pk=pk)
+    form = PaymentItemForm(request.POST or None, instance=obj)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "支払い項目を更新しました。")
+        return redirect("core:payment_settings")
+    return render(request, "payment_form.html", {"title": "支払い項目編集", "form": form})
+
+@login_required
+def paymentitem_delete(request, pk):
+    obj = get_object_or_404(PaymentItem, pk=pk)
+    if request.method == "POST":
+        obj.delete()
+        messages.success(request, "支払い項目を削除しました。")
+        return redirect("core:payment_settings")
+    return render(request, "payment_delete_confirm.html", {
+        "title": "支払い項目削除",
+        "object": obj,
+        "back_url": reverse("core:payment_settings"),
     })

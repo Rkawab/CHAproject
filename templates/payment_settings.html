@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}支払い設定{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">支払い設定（クレカ控え）</h2>
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <strong>クレカ情報</strong>
+        <!--とりあえずボタン未実装
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'core:creditcard_create' %}">追加</a>
+        -->
+      </div>
+      <div class="card-body">
+        {% if cards %}
+          <ul class="list-group">
+            {% for c in cards %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="fw-bold">{{ c.name }}</div>
+                  <div class="text-muted small">{{ c.owner.name }}{% if c.note %} / {{ c.note }}{% endif %}</div>
+                </div>
+                <!--とりあえずボタン未実装
+                <div class="btn-group">
+                  <a class="btn btn-sm btn-outline-secondary" href="{% url 'core:creditcard_edit' c.pk %}">編集</a>
+                  <a class="btn btn-sm btn-outline-danger" href="{% url 'core:creditcard_delete' c.pk %}">削除</a>
+                </div>
+                -->
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="text-muted">まだクレカが登録されていません。</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <strong>固定費支払い（費用名 → クレカ）</strong>
+        <!--とりあえずボタン未実装
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'core:paymentitem_create' %}">追加</a>
+        -->
+      </div>
+      <div class="card-body p-0">
+        <table class="table mb-0">
+          <thead>
+            <tr>
+              <th>費用名</th>
+              <th>クレカ</th>
+              <th>所有者</th>
+              <!--とりあえずボタン未実装
+              <th class="text-end">操作</th>
+              -->
+            </tr>
+          </thead>
+          <tbody>
+            {% for it in items %}
+              <tr>
+                <td>
+                  {{ it.name }}
+                </td>
+                <td>
+                  {% if it.card %}{{ it.card.name }}{% else %}<span class="text-muted">未設定</span>{% endif %}
+                </td>
+                <td>
+                  {% if it.card %}{{ it.card.owner.name }}{% else %}-{% endif %}
+                </td>
+                <!--とりあえずボタン未実装
+                <td class="text-end">
+                    
+                  <div class="btn-group">
+                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'core:paymentitem_edit' it.pk %}">編集</a>
+                    <a class="btn btn-sm btn-outline-danger" href="{% url 'core:paymentitem_delete' it.pk %}">削除</a>
+                  </div>
+                </td>
+                -->
+              </tr>
+            {% empty %}
+              <tr><td colspan="4" class="text-muted p-3">支払い項目が未登録です。</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
