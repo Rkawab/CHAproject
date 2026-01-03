@@ -40,12 +40,12 @@
         <ul class="list-group">
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 <div class="mt-1">
-                    <strong>{{ settlement_info.payer_from }}</strong> → <strong>{{ settlement_info.payer_to }}</strong> へ送金
+                    <strong>{{ settlement_info.payer_from }}</strong> → <strong>{{ settlement_info.payer_to }}</strong> へ
                 </div>
                 <span class="badge bg-warning text-dark rounded-pill">{{ settlement_info.amount|intcomma }} 円</span>
                 <form method="POST" action="{% url 'largecosts:clear_settlement' %}" onsubmit="return confirm('精算をリセットします。よろしいですか？');">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-outline-danger">精算リセット</button>
+                    <button type="submit" class="btn btn-sm btn-outline-danger">精算</button>
                 </form>
             </li>
         </ul>

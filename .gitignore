@@ -27,7 +27,6 @@ ENV/
 
 # Static files
 staticfiles/
-media/
 
 # macOS/Linux/Windows一時ファイル
 .DS_Store
