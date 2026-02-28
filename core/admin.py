@@ -4,8 +4,8 @@ from .models import Budget, CreditCard, PaymentItem
 
 @admin.register(Budget)
 class BudgetAdmin(admin.ModelAdmin):
-    list_display = ('category', 'amount')
-    list_filter = ('category',)
+    list_display = ("category", "amount")
+    list_filter = ("category",)
 
 
 @admin.register(CreditCard)
@@ -26,4 +26,5 @@ class PaymentItemAdmin(admin.ModelAdmin):
 
     def card_owner(self, obj):
         return obj.card.owner.name if obj.card else "-"
+
     card_owner.short_description = "所有者"

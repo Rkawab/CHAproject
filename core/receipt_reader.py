@@ -11,6 +11,7 @@ from openai import OpenAI
 
 class ReceiptReadError(Exception):
     """レシート読み取りに失敗したときに投げる例外."""
+
     pass
 
 
