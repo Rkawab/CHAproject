@@ -7,24 +7,27 @@
 <!-- 新規追加ボタン -->
 <div class="mb-4">
   <h5>新規追加</h5>
-  <div class="d-flex flex-wrap gap-2">
-    {% for payer in payers %}
+  {% for payer in payers %}
+  <div class="mb-3">
+    <p class="mb-1 text-muted small">{{ payer.name }}</p>
+    <div class="d-flex flex-column align-items-start gap-2">
       <a href="{% url 'privatecosts:variable_new' payer.name %}" class="btn btn-outline-primary">
         変動費追加（{{ payer.name }}）
       </a>
       <a href="{% url 'privatecosts:fixed_edit' payer.name %}" class="btn btn-outline-secondary">
-        固定費追加（{{ payer.name }}）
+        固定費追加・編集（{{ payer.name }}）
       </a>
-    {% empty %}
-      <p class="text-muted">利用者が登録されていません。</p>
-    {% endfor %}
+    </div>
   </div>
+  {% empty %}
+    <p class="text-muted">利用者が登録されていません。</p>
+  {% endfor %}
 </div>
 
 <!-- 個人家計簿へのリンク -->
 <div>
   <h5>個人家計簿</h5>
-  <div class="d-flex flex-wrap gap-2">
+  <div class="d-flex flex-column align-items-start gap-2">
     {% for payer in payers %}
       <a href="{% url 'privatecosts:detail' payer.name %}" class="btn btn-success btn-lg">
         {{ payer.name }} の個人家計簿

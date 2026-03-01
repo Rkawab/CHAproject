@@ -21,7 +21,21 @@
     <div class="input-group">
       {% render_field form.amount class="form-control" %}
       <button type="button" class="btn btn-outline-secondary" onclick="openCalculator()">電卓</button>
+
+      <!-- レシート読み取りボタン -->
+      <button type="button" class="btn btn-outline-secondary" id="scan-receipt-btn">
+        レシート読み取り
+      </button>
     </div>
+
+    <!-- カメラ/画像用の隠し input -->
+    <input
+      type="file"
+      id="receipt-input"
+      accept="image/*"
+      capture="environment"
+      style="display: none;"
+    >
   </div>
 
   {% include "includes/bootstrap_field.html" with field=form.cost_item %}
@@ -36,5 +50,76 @@
 <a href="{% url 'privatecosts:detail' payer.name %}" class="btn btn-outline-secondary mb-2">一覧に戻る</a>
 
 {% include "includes/calculator_modal.html" %}
+
+<script>
+  (function () {
+    const scanBtn = document.getElementById("scan-receipt-btn");
+    const fileInput = document.getElementById("receipt-input");
+    const amountInput = document.getElementById("id_amount");
+    const dateInput = document.getElementById("id_purchase_date");
+    const costItemSelect = document.getElementById("id_cost_item");
+    const descriptionInput = document.getElementById("id_description");
+    const csrfTokenInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+
+    if (!scanBtn || !fileInput || !amountInput || !csrfTokenInput) {
+      return;
+    }
+
+    const csrfToken = csrfTokenInput.value;
+
+    scanBtn.addEventListener("click", function () {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener("change", function () {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("receipt_image", file);
+
+      scanBtn.disabled = true;
+      const originalText = scanBtn.textContent;
+      scanBtn.textContent = "読み取り中...";
+
+      fetch("{% url 'privatecosts:scan_receipt' payer.name %}", {
+        method: "POST",
+        headers: { "X-CSRFToken": csrfToken },
+        body: formData,
+      })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || "レシートの読み取りに失敗しました。");
+        }
+        return data;
+      })
+      .then((data) => {
+        if (data.amount !== undefined && data.amount !== null) {
+          amountInput.value = data.amount;
+        }
+        if (data.purchase_date && dateInput) {
+          dateInput.value = data.purchase_date;
+        }
+        if (data.description && descriptionInput) {
+          descriptionInput.value = data.description;
+        }
+        if (data.cost_item_id && costItemSelect) {
+          costItemSelect.value = data.cost_item_id;
+        }
+        alert("レシートの読み取りが完了しました。");
+      })
+      .catch((err) => {
+        console.error(err);
+        alert(err.message || "レシートの読み取り中にエラーが発生しました。");
+      })
+      .finally(() => {
+        scanBtn.disabled = false;
+        scanBtn.textContent = originalText;
+        fileInput.value = "";
+      });
+    });
+  })();
+</script>
 
 {% endblock %}

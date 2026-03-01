@@ -1,12 +1,15 @@
 from datetime import timedelta
 from calendar import monthrange
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Sum, Min, Max
-from core.models import Payer
+from django.views.decorators.http import require_POST
+from core.models import Payer, CostItem
 from core.utils import sort_cost_items_with_other_last, build_available_months
+from core.receipt_reader import ReceiptReadError, extract_receipt_info
 from .models import PrivateVariableCost, PrivateFixedCost
 from .forms import PrivateVariableCostForm, PrivateFixedCostForm
 
@@ -203,6 +206,48 @@ def private_fixed_edit(request, payer_name, year=None, month=None):
             "is_new": not fixed_cost.pk,
         },
     )
+
+
+@login_required
+@require_POST
+def scan_receipt(request, payer_name):
+    """
+    レシート画像を受け取り、金額・購入日・費目候補・名称を JSON で返す API。
+    variablecosts の scan_receipt と同じ実装。
+    """
+    image_file = request.FILES.get("receipt_image")
+    if not image_file:
+        return JsonResponse({"error": "レシート画像が選択されていません。"}, status=400)
+
+    try:
+        info = extract_receipt_info(image_file)
+    except ReceiptReadError as e:
+        return JsonResponse({"error": str(e)}, status=400)
+    except Exception:
+        return JsonResponse(
+            {"error": "レシートの読み取り中にエラーが発生しました。"},
+            status=500,
+        )
+
+    amount = info["amount"]
+    purchase_date = info["purchase_date"]
+    raw_category = info["raw_category"]
+    description = info["description"]
+
+    cost_item = CostItem.objects.filter(name=raw_category).first()
+    if cost_item is None:
+        cost_item = CostItem.objects.filter(name="その他").first()
+
+    response_data = {
+        "amount": amount,
+        "purchase_date": purchase_date,
+        "description": description,
+    }
+    if cost_item is not None:
+        response_data["cost_item_id"] = cost_item.id
+        response_data["cost_item_name"] = cost_item.name
+
+    return JsonResponse(response_data)
 
 
 @login_required

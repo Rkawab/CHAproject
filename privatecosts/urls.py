@@ -29,6 +29,12 @@ urlpatterns = [
         views.private_variable_delete,
         name="variable_delete",
     ),
+    # レシート読み取りAPI
+    path(
+        "<str:payer_name>/variable/scan-receipt/",
+        views.scan_receipt,
+        name="scan_receipt",
+    ),
     # 固定費 CRUD
     path(
         "<str:payer_name>/fixed/edit/",
