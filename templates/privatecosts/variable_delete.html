@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}変動費の削除確認 - {{ payer.name }}{% endblock %}
+{% block content %}
+
+<h2 class="my-3">削除の確認</h2>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <p><strong>日付：</strong>{{ entry.purchase_date }}</p>
+    <p><strong>費目：</strong>{{ entry.cost_item.name }}</p>
+    <p><strong>金額：</strong>{{ entry.amount }} 円</p>
+    <p><strong>名称：</strong>{{ entry.description }}</p>
+  </div>
+</div>
+
+<p class="text-danger">この変動費データを削除してもよろしいですか？</p>
+
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-danger">削除する</button>
+  <a href="{% url 'privatecosts:detail' payer.name %}" class="btn btn-outline-secondary">キャンセル</a>
+</form>
+
+{% endblock %}

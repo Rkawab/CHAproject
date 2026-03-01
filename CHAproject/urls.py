@@ -11,4 +11,5 @@ urlpatterns = [
     path("variablecosts/", include("variablecosts.urls")),
     path("fixedcosts/", include("fixedcosts.urls")),
     path("largecosts/", include("largecosts.urls")),
+    path("privatecosts/", include("privatecosts.urls")),
 ]

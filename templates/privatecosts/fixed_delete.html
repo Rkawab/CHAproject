@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}固定費の削除確認 - {{ payer.name }}{% endblock %}
+{% block content %}
+
+<h2 class="my-3">削除の確認</h2>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <p><strong>使用者：</strong>{{ payer.name }}</p>
+    <p><strong>対象月：</strong>{{ fixed_cost.year }}年{{ fixed_cost.month }}月</p>
+    {% if fixed_cost.salary %}<p><strong>給与収入：</strong>{{ fixed_cost.salary }} 円</p>{% endif %}
+    {% if fixed_cost.deduction %}<p><strong>差引控除額：</strong>{{ fixed_cost.deduction }} 円</p>{% endif %}
+    {% if fixed_cost.shared_cost %}<p><strong>夫婦折半費用：</strong>{{ fixed_cost.shared_cost }} 円</p>{% endif %}
+    {% if fixed_cost.subscriptions %}<p><strong>サブスク代：</strong>{{ fixed_cost.subscriptions }} 円</p>{% endif %}
+  </div>
+</div>
+
+<p class="text-danger">この固定費データを削除してもよろしいですか？</p>
+
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-danger">削除する</button>
+  <a href="{% url 'privatecosts:detail' payer.name %}" class="btn btn-outline-secondary">キャンセル</a>
+</form>
+
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% block title %}
+  {% if is_new %}固定費の追加{% else %}固定費の編集{% endif %} - {{ payer.name }}
+{% endblock %}
+{% block content %}
+
+{% if is_new %}
+  <h2 class="my-3">{{ payer.name }} の固定費を追加</h2>
+{% else %}
+  <h2 class="my-3">{{ payer.name }} の固定費を編集（{{ year }}年{{ month }}月）</h2>
+{% endif %}
+
+<form method="post" class="needs-validation" novalidate>
+  {% csrf_token %}
+
+  <div class="row mb-3">
+    <div class="col-6">
+      {% include "includes/bootstrap_field.html" with field=form.year %}
+    </div>
+    <div class="col-6">
+      {% include "includes/bootstrap_field.html" with field=form.month %}
+    </div>
+  </div>
+
+  <!-- 給与収入（＋項目） -->
+  <div class="mb-3">
+    <label for="{{ form.salary.id_for_label }}" class="form-label fw-bold text-success">{{ form.salary.label }}（収入）</label>
+    <div class="input-group">
+      {% render_field form.salary class="form-control" %}
+      <button type="button" class="btn btn-outline-secondary" onclick="openCalculator('id_salary')">電卓</button>
+    </div>
+    {% if form.salary.errors %}
+      <div class="text-danger small">{{ form.salary.errors }}</div>
+    {% endif %}
+  </div>
+
+  <!-- 差引控除額 -->
+  <div class="mb-3">
+    <label for="{{ form.deduction.id_for_label }}" class="form-label">{{ form.deduction.label }}（控除）</label>
+    <div class="input-group">
+      {% render_field form.deduction class="form-control" %}
+      <button type="button" class="btn btn-outline-secondary" onclick="openCalculator('id_deduction')">電卓</button>
+    </div>
+    {% if form.deduction.errors %}
+      <div class="text-danger small">{{ form.deduction.errors }}</div>
+    {% endif %}
+  </div>
+
+  <!-- 夫婦折半費用 -->
+  <div class="mb-3">
+    <label for="{{ form.shared_cost.id_for_label }}" class="form-label">{{ form.shared_cost.label }}</label>
+    <div class="input-group">
+      {% render_field form.shared_cost class="form-control" %}
+      <button type="button" class="btn btn-outline-secondary" onclick="openCalculator('id_shared_cost')">電卓</button>
+    </div>
+    {% if form.shared_cost.errors %}
+      <div class="text-danger small">{{ form.shared_cost.errors }}</div>
+    {% endif %}
+  </div>
+
+  <!-- サブスク代 -->
+  <div class="mb-3">
+    <label for="{{ form.subscriptions.id_for_label }}" class="form-label">{{ form.subscriptions.label }}</label>
+    <div class="input-group">
+      {% render_field form.subscriptions class="form-control" %}
+      <button type="button" class="btn btn-outline-secondary" onclick="openCalculator('id_subscriptions')">電卓</button>
+    </div>
+    {% if form.subscriptions.errors %}
+      <div class="text-danger small">{{ form.subscriptions.errors }}</div>
+    {% endif %}
+  </div>
+
+  <button type="submit" class="btn btn-outline-primary">保存</button>
+  {% if not is_new %}
+    <a href="{% url 'privatecosts:fixed_delete' payer.name year month %}" class="btn btn-outline-danger">削除</a>
+  {% endif %}
+</form><br>
+
+<a href="{% url 'privatecosts:detail' payer.name %}" class="btn btn-outline-secondary mb-2">一覧に戻る</a>
+
+{% include "includes/calculator_modal.html" %}
+
+{% endblock %}

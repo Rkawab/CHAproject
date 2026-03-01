@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}個人用家計簿{% endblock %}
+{% block content %}
+
+<h2 class="mb-4">個人用家計簿</h2>
+
+<!-- 新規追加ボタン -->
+<div class="mb-4">
+  <h5>新規追加</h5>
+  <div class="d-flex flex-wrap gap-2">
+    {% for payer in payers %}
+      <a href="{% url 'privatecosts:variable_new' payer.name %}" class="btn btn-outline-primary">
+        変動費追加（{{ payer.name }}）
+      </a>
+      <a href="{% url 'privatecosts:fixed_edit' payer.name %}" class="btn btn-outline-secondary">
+        固定費追加（{{ payer.name }}）
+      </a>
+    {% empty %}
+      <p class="text-muted">利用者が登録されていません。</p>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- 個人家計簿へのリンク -->
+<div>
+  <h5>個人家計簿</h5>
+  <div class="d-flex flex-wrap gap-2">
+    {% for payer in payers %}
+      <a href="{% url 'privatecosts:detail' payer.name %}" class="btn btn-success btn-lg">
+        {{ payer.name }} の個人家計簿
+      </a>
+    {% empty %}
+      <p class="text-muted">利用者が登録されていません。</p>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

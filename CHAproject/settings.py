@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "variablecosts",
     "fixedcosts",
     "largecosts",
+    "privatecosts",
     "widget_tweaks",
 ]
 

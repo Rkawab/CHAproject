@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}{{ payer.name }} の個人家計簿（{{ year }}年{{ month }}月）{% endblock %}
+{% block content %}
+
+<h2 class="mb-4">{{ payer.name }} の出費（{{ year }}年{{ month }}月）</h2>
+
+<!-- 月移動ナビ -->
+<div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <a href="{% url 'privatecosts:detail_by_month' payer.name prev_month.year prev_month.month %}" class="btn btn-outline-secondary">&lt;&lt; 前月</a>
+
+  <select class="form-select w-auto" onchange="if(this.value){ window.location.href=this.value; }" aria-label="月を選択">
+    {% for m in available_months %}
+      <option value="{% url 'privatecosts:detail_by_month' payer.name m.year m.month %}" {% if m.year == year and m.month == month %}selected{% endif %}>
+        {{ m.year }}年{{ m.month }}月
+      </option>
+    {% endfor %}
+  </select>
+
+  {% if next_month %}
+    <a href="{% url 'privatecosts:detail_by_month' payer.name next_month.year next_month.month %}" class="btn btn-outline-secondary">翌月 &gt;&gt;</a>
+  {% else %}
+    <button class="btn btn-outline-secondary" disabled>翌月 &gt;&gt;</button>
+  {% endif %}
+</div>
+
+<!-- 変動費・固定費 追加ボタン -->
+<div class="mb-3 d-flex gap-2 flex-wrap">
+  <a href="{% url 'privatecosts:variable_new' payer.name %}" class="btn btn-outline-primary">変動費追加</a>
+  <a href="{% url 'privatecosts:fixed_edit_by_month' payer.name year month %}" class="btn btn-outline-secondary">固定費追加・編集</a>
+</div>
+
+<!-- 今月の収支カード -->
+<div class="card mb-4 shadow-sm">
+  <div class="card-body">
+    <h5 class="card-title">今月の収支</h5>
+    <table class="table table-sm mb-2">
+      <tbody>
+        <tr>
+          <td class="text-success fw-bold">給与収入</td>
+          <td class="text-end text-success fw-bold">+ {{ salary|intcomma }} 円</td>
+        </tr>
+        <tr>
+          <td class="text-muted">差引控除額</td>
+          <td class="text-end text-muted">- {{ deduction|intcomma }} 円</td>
+        </tr>
+        <tr>
+          <td class="text-muted">夫婦折半費用</td>
+          <td class="text-end text-muted">- {{ shared_cost|intcomma }} 円</td>
+        </tr>
+        <tr>
+          <td class="text-muted">サブスク代</td>
+          <td class="text-end text-muted">- {{ subscriptions|intcomma }} 円</td>
+        </tr>
+        <tr>
+          <td class="text-muted">変動費合計</td>
+          <td class="text-end text-muted">- {{ variable_total|intcomma }} 円</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="fs-4 fw-bold mb-0 {% if balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+      収支：{% if balance >= 0 %}+{% endif %}{{ balance|intcomma }} 円
+    </p>
+  </div>
+</div>
+
+<!-- 固定費セクション -->
+<h4 class="mt-4 mb-3">固定費</h4>
+{% if fixed_cost %}
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <div class="d-flex justify-content-end gap-2 mb-2">
+      <a href="{% url 'privatecosts:fixed_edit_by_month' payer.name year month %}" class="btn btn-sm btn-outline-primary">編集</a>
+      <a href="{% url 'privatecosts:fixed_delete' payer.name year month %}" class="btn btn-sm btn-outline-danger">削除</a>
+    </div>
+    <table class="table table-sm">
+      <tbody>
+        <tr>
+          <td class="fw-bold text-success">給与収入</td>
+          <td class="text-end text-success fw-bold">+ {{ fixed_cost.salary|default:0|intcomma }} 円</td>
+        </tr>
+        <tr>
+          <td>差引控除額</td>
+          <td class="text-end">- {{ fixed_cost.deduction|default:0|intcomma }} 円</td>
+        </tr>
+        <tr>
+          <td>夫婦折半費用</td>
+          <td class="text-end">- {{ fixed_cost.shared_cost|default:0|intcomma }} 円</td>
+        </tr>
+        <tr>
+          <td>サブスク代</td>
+          <td class="text-end">- {{ fixed_cost.subscriptions|default:0|intcomma }} 円</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<p class="text-muted">この月の固定費データはありません。
+  <a href="{% url 'privatecosts:fixed_edit_by_month' payer.name year month %}">追加する</a>
+</p>
+{% endif %}
+
+<!-- 変動費セクション -->
+<h4 class="mt-4 mb-3">変動費</h4>
+
+<!-- 合計 -->
+<div class="card mb-3 shadow-sm">
+  <div class="card-body">
+    <h5 class="card-title">変動費合計</h5>
+    <p class="card-text fs-4 fw-bold text-primary">{{ variable_total|intcomma }} 円</p>
+  </div>
+</div>
+
+<!-- 内訳グラフ -->
+{% if cost_item_totals %}
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h5 class="card-title mb-3">内訳</h5>
+    <div class="chart-wrapper chart-wrapper--pie" style="position: relative; height: 300px;">
+      <canvas id="costPieChart"></canvas>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- モバイル用：カード形式 -->
+<div class="d-block d-md-none">
+  {% for entry in variable_entries %}
+  <div class="card mb-3 shadow-sm">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center">
+        <h6 class="card-title mb-1">{{ entry.purchase_date }}</h6>
+        <div class="d-flex gap-2">
+          <a href="{% url 'privatecosts:variable_edit' payer.name entry.pk %}" class="btn btn-sm btn-outline-primary">編集</a>
+          <a href="{% url 'privatecosts:variable_delete' payer.name entry.pk %}" class="btn btn-sm btn-outline-danger">削除</a>
+        </div>
+      </div>
+      <div class="row small text-nowrap">
+        <div class="col-4"><strong>費目:</strong> {{ entry.cost_item.name }}</div>
+        <div class="col-4"><strong>金額:</strong> {{ entry.amount|intcomma }} 円</div>
+        <div class="col-4"><strong>使用者:</strong> {{ entry.user.name }}</div>
+      </div>
+      <div class="mt-1">
+        <strong>名称:</strong> {{ entry.description }}
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <p class="text-muted">データがありません。</p>
+  {% endfor %}
+</div>
+
+<!-- PC用：テーブル形式 -->
+<div class="table-responsive d-none d-md-block">
+  <table class="table table-striped table-bordered">
+    <thead class="table-light text-center">
+      <tr>
+        <th>日付</th>
+        <th>費目</th>
+        <th>金額</th>
+        <th>名称</th>
+        <th>使用者</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody class="text-center">
+      {% for entry in variable_entries %}
+      <tr>
+        <td>{{ entry.purchase_date }}</td>
+        <td>{{ entry.cost_item.name }}</td>
+        <td class="text-end">\{{ entry.amount|intcomma }}</td>
+        <td>{{ entry.description }}</td>
+        <td>{{ entry.user.name }}</td>
+        <td>
+          <a href="{% url 'privatecosts:variable_edit' payer.name entry.pk %}" class="btn btn-sm btn-outline-primary">編集</a>
+          <a href="{% url 'privatecosts:variable_delete' payer.name entry.pk %}" class="btn btn-sm btn-outline-danger">削除</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="text-muted">データがありません。</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if cost_item_totals %}
+<script>
+  const ctx = document.getElementById('costPieChart').getContext('2d');
+
+  const labels = [
+    {% for item in cost_item_totals %}
+      "{{ item.cost_item__name }}",
+    {% endfor %}
+  ];
+
+  const data = [
+    {% for item in cost_item_totals %}
+      {{ item.total }},
+    {% endfor %}
+  ];
+
+  const backgroundColors = [
+    '#D93F3C', '#C49200', '#59A14F', '#4E79A7', '#9C6ACF', '#5A5A5A',
+  ];
+
+  new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: backgroundColors,
+        borderColor: '#fff',
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom' },
+        datalabels: {
+          color: '#fff',
+          font: { weight: 'bold', size: 12 },
+          anchor: 'end',
+          align: 'start',
+          offset: 10,
+          formatter: (value, context) => {
+            const label = context.chart.data.labels[context.dataIndex];
+            return label + "\n" + value.toLocaleString() + " 円";
+          }
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+</script>
+{% endif %}
+
+{% endblock %}
