@@ -47,18 +47,6 @@
     {% endif %}
   </div>
 
-  <!-- 夫婦折半費用 -->
-  <div class="mb-3">
-    <label for="{{ form.shared_cost.id_for_label }}" class="form-label">{{ form.shared_cost.label }}</label>
-    <div class="input-group">
-      {% render_field form.shared_cost class="form-control" %}
-      <button type="button" class="btn btn-outline-secondary" onclick="openCalculator('id_shared_cost')">電卓</button>
-    </div>
-    {% if form.shared_cost.errors %}
-      <div class="text-danger small">{{ form.shared_cost.errors }}</div>
-    {% endif %}
-  </div>
-
   <!-- サブスク代 -->
   <div class="mb-3">
     <label for="{{ form.subscriptions.id_for_label }}" class="form-label">{{ form.subscriptions.label }}</label>

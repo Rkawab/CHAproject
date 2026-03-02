@@ -84,8 +84,8 @@
           <td class="text-end">- {{ fixed_cost.deduction|default:0|intcomma }} 円</td>
         </tr>
         <tr>
-          <td>夫婦折半費用</td>
-          <td class="text-end">- {{ fixed_cost.shared_cost|default:0|intcomma }} 円</td>
+          <td>夫婦折半費用 <small class="text-muted">（自動計算）</small></td>
+          <td class="text-end">- {{ shared_cost|intcomma }} 円</td>
         </tr>
         <tr>
           <td>サブスク代</td>

@@ -10,6 +10,8 @@ from django.views.decorators.http import require_POST
 from core.models import Payer, CostItem
 from core.utils import sort_cost_items_with_other_last, build_available_months
 from core.receipt_reader import ReceiptReadError, extract_receipt_info
+from fixedcosts.models import FixedCost
+from variablecosts.models import VariableCost
 from .models import PrivateVariableCost, PrivateFixedCost
 from .forms import PrivateVariableCostForm, PrivateFixedCostForm
 
@@ -61,8 +63,22 @@ def privatecosts_detail(request, payer_name, year=None, month=None):
     # 収支計算: 給与収入 - 差引控除額 - (折半費 + サブスク + 変動費合計)
     salary = (fixed_cost.salary or 0) if fixed_cost else 0
     deduction = (fixed_cost.deduction or 0) if fixed_cost else 0
-    shared_cost = (fixed_cost.shared_cost or 0) if fixed_cost else 0
     subscriptions = (fixed_cost.subscriptions or 0) if fixed_cost else 0
+
+    # 夫婦折半費用：当月の家計合計（固定費＋変動費）の1/2を自動計算
+    try:
+        household_fixed = FixedCost.objects.get(year=year, month=month)
+        household_fixed_total = int(household_fixed.get_total_cost())
+    except FixedCost.DoesNotExist:
+        household_fixed_total = 0
+    household_variable_total = (
+        VariableCost.objects.filter(
+            purchase_date__range=(start_date, end_date)
+        ).aggregate(total=Sum("amount"))["total"]
+        or 0
+    )
+    shared_cost = (household_fixed_total + household_variable_total) // 2
+
     balance = salary - deduction - shared_cost - subscriptions - variable_total
 
     # ナビゲーション用の前月・次月
