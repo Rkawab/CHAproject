@@ -64,6 +64,7 @@ def privatecosts_detail(request, payer_name, year=None, month=None):
     salary = (fixed_cost.salary or 0) if fixed_cost else 0
     deduction = (fixed_cost.deduction or 0) if fixed_cost else 0
     subscriptions = (fixed_cost.subscriptions or 0) if fixed_cost else 0
+    savings = (fixed_cost.savings or 0) if fixed_cost else 0
 
     # 夫婦折半費用：当月の家計合計（固定費＋変動費）の1/2を自動計算
     try:
@@ -79,7 +80,7 @@ def privatecosts_detail(request, payer_name, year=None, month=None):
     )
     shared_cost = (household_fixed_total + household_variable_total) // 2
 
-    balance = salary - deduction - shared_cost - subscriptions - variable_total
+    balance = salary - deduction - shared_cost - subscriptions - savings - variable_total
 
     # ナビゲーション用の前月・次月
     prev_month_date = (start_date - timedelta(days=1)).replace(day=1)
@@ -114,6 +115,7 @@ def privatecosts_detail(request, payer_name, year=None, month=None):
             "deduction": deduction,
             "shared_cost": shared_cost,
             "subscriptions": subscriptions,
+            "savings": savings,
             "balance": balance,
             "prev_month": prev_month_date,
             "next_month": next_month_obj,

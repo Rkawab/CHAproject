@@ -30,6 +30,7 @@ class PrivateFixedCost(models.Model):
     deduction = models.IntegerField("差引控除額", default=0, null=True, blank=True)
     shared_cost = models.IntegerField("夫婦折半費用", default=0, null=True, blank=True)
     subscriptions = models.IntegerField("サブスク代", default=0, null=True, blank=True)
+    savings = models.IntegerField("積立費用", default=20000, null=True, blank=True)
 
     class Meta:
         db_table = "private_fixed_cost"

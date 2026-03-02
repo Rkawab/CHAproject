@@ -39,6 +39,7 @@ class PrivateFixedCostForm(forms.ModelForm):
             "salary",
             "deduction",
             "subscriptions",
+            "savings",
         ]
 
     def __init__(self, *args, **kwargs):
@@ -51,7 +52,7 @@ class PrivateFixedCostForm(forms.ModelForm):
             self.fields["year"].initial = today.year
             self.fields["month"].initial = today.month
         # 各費目は任意入力
-        for field_name in ["salary", "deduction", "subscriptions"]:
+        for field_name in ["salary", "deduction", "subscriptions", "savings"]:
             self.fields[field_name].required = False
 
     def clean(self):

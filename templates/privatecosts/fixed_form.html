@@ -59,6 +59,18 @@
     {% endif %}
   </div>
 
+  <!-- 積立費用 -->
+  <div class="mb-3">
+    <label for="{{ form.savings.id_for_label }}" class="form-label">{{ form.savings.label }}</label>
+    <div class="input-group">
+      {% render_field form.savings class="form-control" %}
+      <button type="button" class="btn btn-outline-secondary" onclick="openCalculator('id_savings')">電卓</button>
+    </div>
+    {% if form.savings.errors %}
+      <div class="text-danger small">{{ form.savings.errors }}</div>
+    {% endif %}
+  </div>
+
   <button type="submit" class="btn btn-outline-primary">保存</button>
   {% if not is_new %}
     <a href="{% url 'privatecosts:fixed_delete' payer.name year month %}" class="btn btn-outline-danger">削除</a>

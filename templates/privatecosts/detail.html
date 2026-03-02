@@ -53,6 +53,10 @@
           <td class="text-end text-muted">- {{ subscriptions|intcomma }} 円</td>
         </tr>
         <tr>
+          <td class="text-muted">積立費用</td>
+          <td class="text-end text-muted">- {{ savings|intcomma }} 円</td>
+        </tr>
+        <tr>
           <td class="text-muted">変動費合計</td>
           <td class="text-end text-muted">- {{ variable_total|intcomma }} 円</td>
         </tr>
@@ -90,6 +94,10 @@
         <tr>
           <td>サブスク代</td>
           <td class="text-end">- {{ fixed_cost.subscriptions|default:0|intcomma }} 円</td>
+        </tr>
+        <tr>
+          <td>積立費用</td>
+          <td class="text-end">- {{ fixed_cost.savings|default:0|intcomma }} 円</td>
         </tr>
       </tbody>
     </table>
