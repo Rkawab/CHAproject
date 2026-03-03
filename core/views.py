@@ -247,25 +247,17 @@ def summary(request):
     fixed_series = [int(fc_map.get(lab, 0) or 0) for lab in labels]
     rent_series = [int(rent_map.get(lab, 0) or 0) for lab in labels]
 
-    # 家賃以外 = 変動費 + 固定費 - 家賃（念のためマイナスは0に丸め）
-    total_without_rent_series = [
-        max(0, int(v) + int(f) - int(r))
-        for v, f, r in zip(variable_series, fixed_series, rent_series)
-    ]
-
-    # 家賃情報を取得
-    rent_value = 0
-    fc = FixedCost.objects.filter(year=base_year, month=base_month).first()
-    if fc and fc.rent is not None:
-        rent_value = int(fc.rent)
-
-    # 今月の合計（seriesの末尾が今月）
-    current_variable = int(variable_series[-1] or 0)
-    current_fixed = int(fixed_series[-1] or 0)
-
-    non_rent_value = current_variable + current_fixed - rent_value
-    if non_rent_value < 0:
-        non_rent_value = 0
+    # 費用分担グラフ用: 2026年1月以降〜先月まで、(総額÷2 - 家賃) を計算
+    SPLIT_START = "2026-01"
+    current_month_label = f"{base_year:04d}-{base_month:02d}"
+    split_labels = []
+    cost_split_series = []
+    for i, lab in enumerate(labels):
+        if SPLIT_START <= lab < current_month_label:
+            split_labels.append(lab)
+            total = variable_series[i] + fixed_series[i]
+            diff = total // 2 - rent_series[i]
+            cost_split_series.append(diff)
 
     return render(
         request,
@@ -277,7 +269,8 @@ def summary(request):
             "large_series": large_series,
             "current_year": base_year,
             "rent_series": rent_series,
-            "total_without_rent_series": total_without_rent_series,
+            "split_labels": split_labels,
+            "cost_split_series": cost_split_series,
         },
     )
 
