@@ -258,6 +258,9 @@ def summary(request):
             total = variable_series[i] + fixed_series[i]
             diff = total // 2 - rent_series[i]
             cost_split_series.append(diff)
+    # 最大12ヶ月に制限（他グラフと同じ上限）
+    split_labels = split_labels[-12:]
+    cost_split_series = cost_split_series[-12:]
 
     return render(
         request,

@@ -30,17 +30,19 @@
 
 <div class="card shadow-sm mb-4">
   <div class="card-body">
-    <h5 class="card-title mb-3">費用分担</h5>
-    <p class="text-muted small mb-2">
-      <span class="badge" style="background-color:#1fb6ca;">青 (プラス)</span> 夫の負担大
-      <span class="badge" style="background-color:#da1a1a;">赤 (マイナス)</span> 妻の負担大
-    </p>
+    <h5 class="card-title mb-3">費用負担</h5>
+    <div class="text-muted small mb-2" style="display:inline-grid; grid-template-columns: auto auto; gap: 2px 6px; align-items: center;">
+      <span class="badge" style="background-color:#1fb6ca;">青 (プラス)</span>
+      <span>：<strong style="color:#1a90a0;">夫</strong>が多く負担した月</span>
+      <span class="badge" style="background-color:#da1a1a;">赤 (マイナス)</span>
+      <span>：<strong style="color:#b51414;">妻</strong>が多く負担した月</span>
+    </div>
     <div class="chart-wrapper chart-wrapper--bar" style="position: relative; height: 300px;">
       <canvas id="costSplitBar"></canvas>
     </div>
   </div>
   <div class="card-footer text-muted small">
-    (変動費＋固定費)÷2 − 家賃 を月別に表示。プラスなら夫の負担が大きく、マイナスなら妻の負担が大きいことを示します。2026年1月以降のデータ。
+    費用負担(=(変動費+固定費)÷2‐家賃) を表示します。<br> ※2026年1月以降のデータのみ
   </div>
 </div>
 
