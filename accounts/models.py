@@ -1,3 +1,5 @@
+import logging
+
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from uuid import uuid4
@@ -7,6 +9,8 @@ from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth.models import UserManager
 from .utils import send_activation_email  # メール送信機能の追加
+
+logger = logging.getLogger(__name__)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -41,6 +45,7 @@ class UserActivateTokenManager(models.Manager):
         user = user_activate_token.user
         user.is_active = True
         user.save()
+        user_activate_token.delete()  # 使用済みトークンを削除
         return user
 
     # トークンを新規発行 or 更新する処理
@@ -91,6 +96,10 @@ def publish_token(
 ):  # これらの引数はDjangoが自動で引数を関数に渡す
     if created:  # ← ユーザーが新規作成されたときだけ
         user_activate_token = UserActivateToken.objects.create_or_update_token(instance)
-        send_activation_email(
-            instance, user_activate_token.token
-        )  # ← メール送信に置き換え
+        try:
+            send_activation_email(instance, user_activate_token.token)
+        except Exception:
+            logger.error(
+                "アクティベーションメール送信に失敗しました。user_id=%s のトークンはDBに残っています。",
+                instance.pk,
+            )

@@ -16,6 +16,7 @@ def regist(request):
         regist_form.is_valid()
     ):  # formsのcleanメソッドに記載したエラーが発生していない場合True
         regist_form.save(commit=True)  # commit=True：データベースに保存する
+        messages.success(request, "登録メールを送信しました。メールのURLをクリックして本登録を完了してください。")
         return redirect("core:home")  # 登録完了したら/homeの画面に移る
     return render(
         request,
