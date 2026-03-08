@@ -69,43 +69,11 @@
   </div>
 </div>
 
-<!-- 固定費セクション -->
-<h4 class="mt-4 mb-3">固定費</h4>
+
 {% if fixed_cost %}
-<div class="card shadow-sm mb-4">
-  <div class="card-body">
-    <div class="d-flex justify-content-end gap-2 mb-2">
-      <a href="{% url 'privatecosts:fixed_edit_by_month' payer.name year month %}" class="btn btn-sm btn-outline-primary">編集</a>
-      <a href="{% url 'privatecosts:fixed_delete' payer.name year month %}" class="btn btn-sm btn-outline-danger">削除</a>
-    </div>
-    <table class="table table-sm">
-      <tbody>
-        <tr>
-          <td class="fw-bold text-success">給与収入</td>
-          <td class="text-end text-success fw-bold">+ {{ fixed_cost.salary|default:0|intcomma }} 円</td>
-        </tr>
-        <tr>
-          <td>差引控除額</td>
-          <td class="text-end">- {{ fixed_cost.deduction|default:0|intcomma }} 円</td>
-        </tr>
-        <tr>
-          <td>夫婦折半費用 <small class="text-muted">（自動計算）</small></td>
-          <td class="text-end">- {{ shared_cost|intcomma }} 円</td>
-        </tr>
-        <tr>
-          <td>サブスク代</td>
-          <td class="text-end">- {{ fixed_cost.subscriptions|default:0|intcomma }} 円</td>
-        </tr>
-        <tr>
-          <td>積立費用</td>
-          <td class="text-end">- {{ fixed_cost.savings|default:0|intcomma }} 円</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+
 {% else %}
-<p class="text-muted">この月の固定費データはありません。
+<p class="text-muted">この月の固定費データが入力されていません。
   <a href="{% url 'privatecosts:fixed_edit_by_month' payer.name year month %}">追加する</a>
 </p>
 {% endif %}
