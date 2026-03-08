@@ -1,3 +1,4 @@
+import datetime
 from datetime import timedelta
 from calendar import monthrange
 from django.http import JsonResponse
@@ -5,7 +6,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
-from django.db.models import Sum, Min, Max
+from django.db.models import Count, Sum, Min, Max
 from django.views.decorators.http import require_POST
 from core.models import Payer, CostItem
 from core.utils import sort_cost_items_with_other_last, build_available_months
@@ -266,6 +267,113 @@ def scan_receipt(request, payer_name):
         response_data["cost_item_name"] = cost_item.name
 
     return JsonResponse(response_data)
+
+
+@login_required
+def eating_out_bulk(request, payer_name, year, month):
+    """外食費用の1か月分一括入力"""
+    payer = get_object_or_404(Payer, name=payer_name)
+    _, last_day = monthrange(year, month)
+
+    # 「外食費用」費目を取得（なければ「その他」）
+    eating_out_item = CostItem.objects.filter(name="外食費用").first()
+    if eating_out_item is None:
+        eating_out_item = CostItem.objects.filter(name="その他").first()
+
+    if request.method == "POST":
+        for day in range(1, last_day + 1):
+            date = datetime.date(year, month, day)
+            key_date = date.strftime("%Y%m%d")
+            amount_str = request.POST.get(f"amount_{key_date}", "").strip()
+            description = request.POST.get(f"description_{key_date}", "").strip()
+
+            # 空または0はスキップ
+            try:
+                amount = int(amount_str)
+            except ValueError:
+                continue
+            if amount <= 0:
+                continue
+
+            # 名称が未入力なら「外食」を設定
+            if not description:
+                description = "外食"
+
+            # その日の既存外食費用レコードを全削除して新規作成
+            PrivateVariableCost.objects.filter(
+                user=payer,
+                purchase_date=date,
+                cost_item=eating_out_item,
+            ).delete()
+            PrivateVariableCost.objects.create(
+                user=payer,
+                purchase_date=date,
+                amount=amount,
+                cost_item=eating_out_item,
+                description=description,
+            )
+
+        messages.success(request, f"{year}年{month}月の外食費用を一括登録しました。")
+        return redirect(
+            "privatecosts:detail_by_month",
+            payer_name=payer_name,
+            year=year,
+            month=month,
+        )
+
+    # GET: 各日付の既存外食費用を取得
+    start_date = datetime.date(year, month, 1)
+    end_date = datetime.date(year, month, last_day)
+
+    existing = (
+        PrivateVariableCost.objects.filter(
+            user=payer,
+            purchase_date__range=(start_date, end_date),
+            cost_item=eating_out_item,
+        )
+        .values("purchase_date")
+        .annotate(total=Sum("amount"), count=Count("id"))
+        .order_by("purchase_date")
+    )
+    existing_map = {e["purchase_date"]: e for e in existing}
+
+    # 既存レコードの名称（1件のみの場合）
+    existing_desc_map = {}
+    for ev in PrivateVariableCost.objects.filter(
+        user=payer,
+        purchase_date__range=(start_date, end_date),
+        cost_item=eating_out_item,
+    ).order_by("purchase_date", "id"):
+        d = ev.purchase_date
+        if d not in existing_desc_map:
+            existing_desc_map[d] = {"count": 0, "description": ev.description}
+        existing_desc_map[d]["count"] += 1
+        if existing_desc_map[d]["count"] > 1:
+            existing_desc_map[d]["description"] = "－"
+
+    # 日付ごとのデータ構築
+    day_entries = []
+    for day in range(1, last_day + 1):
+        date = datetime.date(year, month, day)
+        ex = existing_map.get(date)
+        desc_info = existing_desc_map.get(date)
+        day_entries.append({
+            "date": date,
+            "key_date": date.strftime("%Y%m%d"),
+            "amount": ex["total"] if ex else "",
+            "description": desc_info["description"] if desc_info else "",
+        })
+
+    return render(
+        request,
+        "privatecosts/eating_out_bulk.html",
+        {
+            "payer": payer,
+            "year": year,
+            "month": month,
+            "day_entries": day_entries,
+        },
+    )
 
 
 @login_required

@@ -29,6 +29,12 @@ urlpatterns = [
         views.private_variable_delete,
         name="variable_delete",
     ),
+    # 外食費一括入力
+    path(
+        "<str:payer_name>/variable/eating-out/<int:year>/<int:month>/",
+        views.eating_out_bulk,
+        name="eating_out_bulk",
+    ),
     # レシート読み取りAPI
     path(
         "<str:payer_name>/variable/scan-receipt/",
