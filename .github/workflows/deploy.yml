@@ -1,0 +1,30 @@
+name: Deploy to Raspberry Pi
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Pull latest code
+        working-directory: /opt/CHAproject
+        run: git pull origin main
+
+      - name: Install dependencies
+        working-directory: /opt/CHAproject
+        run: |
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Django migrate & collectstatic
+        working-directory: /opt/CHAproject
+        run: |
+          source venv/bin/activate
+          python manage.py migrate --noinput
+          python manage.py collectstatic --noinput
+
+      - name: Restart Gunicorn
+        run: sudo systemctl restart chaproject
