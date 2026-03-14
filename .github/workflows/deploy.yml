@@ -11,7 +11,9 @@ jobs:
     steps:
       - name: Pull latest code
         working-directory: /opt/CHAproject
-        run: git pull origin main
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
 
       - name: Install dependencies
         working-directory: /opt/CHAproject

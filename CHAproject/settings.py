@@ -27,9 +27,11 @@ DEBUG = False
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    os.getenv("RENDER_EXTERNAL_HOSTNAME"),  # Render に合わせる
-    ".onrender.com",  # ワイルドカードで Render のドメインを許可
+    "household-app-bacon.net",  # Raspberry Pi (Cloudflare Tunnel)
+    ".onrender.com",             # Render ワイルドカード
 ]
+if os.getenv("RENDER_EXTERNAL_HOSTNAME"):
+    ALLOWED_HOSTS.append(os.getenv("RENDER_EXTERNAL_HOSTNAME"))
 
 
 # Application definition
@@ -179,3 +181,11 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # OpenAI の API キー
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+
+# プロキシ経由のHTTPS判定（Cloudflare Tunnel / Render 共通）
+CSRF_TRUSTED_ORIGINS = [
+    "https://household-app-bacon.net",
+    "https://*.onrender.com",
+]
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
