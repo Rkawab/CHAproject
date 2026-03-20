@@ -183,6 +183,10 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 
+# サブパス /budget でのデプロイ設定
+# Nginx 側で /budget プレフィックスを除去してから Gunicorn に転送する構成
+FORCE_SCRIPT_NAME = "/budget"
+
 # プロキシ経由のHTTPS判定（Cloudflare Tunnel / Render 共通）
 CSRF_TRUSTED_ORIGINS = [
     "https://household-app-bacon.net",
