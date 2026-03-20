@@ -207,16 +207,61 @@ python manage.py createsuperuser
 
 ## 🚀 デプロイ
 
-Render.com での運用設定：
+### 本番構成（Raspberry Pi）
 
-- **ビルドコマンド**: 
-  ```bash
-  pip install -r requirements.txt
-  python manage.py collectstatic --noinput
-  python manage.py migrate
-  ```
-- **起動コマンド**: `gunicorn CHAproject.wsgi`
-- **環境変数**: `.env` に従って設定
+```
+GitHub (main push)
+    ↓ GitHub Actions セルフホストランナー
+Raspberry Pi (192.168.0.16)
+    ├── cloudflared（Cloudflare Tunnel）
+    ├── Nginx（リバースプロキシ・静的ファイル配信）
+    └── Gunicorn（Django）
+
+Cloudflare → household-app-bacon.net
+DB: Supabase (PostgreSQL)
+```
+
+**注**: DS-Lite(transix)環境のためポートフォワード不可。Cloudflare Tunnelで公開。
+
+#### デプロイ手順（通常）
+
+```bash
+# mainブランチにpushするだけで自動デプロイ（約40秒）
+git push origin main
+```
+
+GitHub の Actions タブで進捗確認可能。
+
+#### Pi上のサービス管理
+
+```bash
+# 各サービスの状態確認
+sudo systemctl status chaproject      # Gunicorn
+sudo systemctl status nginx           # Nginx
+sudo systemctl status cloudflared     # Cloudflare Tunnel
+
+# Nginx設定変更後の反映（文法チェック→リロード）
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+#### Pi上の主要ファイルパス
+
+| パス | 内容 |
+|------|------|
+| `/opt/CHAproject/` | アプリ本体 |
+| `/opt/CHAproject/.env` | 環境変数 |
+| `/etc/nginx/sites-available/chaproject` | Nginx設定 |
+| `/etc/systemd/system/chaproject.service` | Gunicorn systemd設定 |
+| `~/.cloudflared/config.yml` | Cloudflare Tunnel設定 |
+| `~/actions-runner/` | GitHub Actions ランナー |
+
+### バックアップ（Render）
+
+Renderのアプリは削除せず待機状態で維持。Raspberry Piが障害時に手動で起動して使用。
+
+- **Renderデプロイ設定**:
+  - ビルドコマンド: `pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate`
+  - 起動コマンド: `gunicorn CHAproject.wsgi`
 - **静的ファイル**: WhiteNoise で自動配信
 
 
