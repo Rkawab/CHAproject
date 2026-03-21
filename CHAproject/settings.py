@@ -196,8 +196,6 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# セッション／CSRF Cookieを /cooking と競合しないよう分離
+# セッション／CSRF Cookieを /cooking と競合しないよう分離（名前で区別）
 SESSION_COOKIE_NAME = "sessionid_budget"
-SESSION_COOKIE_PATH = "/budget/"
 CSRF_COOKIE_NAME = "csrftoken_budget"
-CSRF_COOKIE_PATH = "/budget/"
