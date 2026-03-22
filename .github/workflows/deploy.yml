@@ -29,4 +29,4 @@ jobs:
           python manage.py collectstatic --noinput
 
       - name: Restart Gunicorn
-        run: sudo systemctl restart chaproject
+        run: sudo systemctl reload chaproject
