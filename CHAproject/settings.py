@@ -185,9 +185,11 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # サブパス /budget でのデプロイ設定
 # Nginx 側で /budget プレフィックスを除去してから Gunicorn に転送する構成
-# Render ではルート "/" で配信するため無効にする
-if not os.getenv("RENDER"):
-    FORCE_SCRIPT_NAME = "/budget"
+# ローカル開発時は .env に FORCE_SCRIPT_NAME を書かない（空 = 無効）
+# 本番（Raspberry Pi）の .env に FORCE_SCRIPT_NAME=/budget を設定する
+_script_name = os.getenv("FORCE_SCRIPT_NAME", "")
+if _script_name:
+    FORCE_SCRIPT_NAME = _script_name
 
 # プロキシ経由のHTTPS判定（Cloudflare Tunnel / Render 共通）
 CSRF_TRUSTED_ORIGINS = [
