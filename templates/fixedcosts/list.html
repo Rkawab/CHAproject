@@ -108,7 +108,10 @@
         <tr><td>電気代</td><td class="text-end">{{ fixed_cost.electricity|default:"-"|intcomma }} 円</td></tr>
         <tr><td>ガス代</td><td class="text-end">{{ fixed_cost.gas|default:"-"|intcomma }} 円</td></tr>
         <tr><td>ネット代</td><td class="text-end">{{ fixed_cost.internet|default:"-"|intcomma }} 円</td></tr>
-        <tr><td>サブスク</td><td class="text-end">{{ fixed_cost.subscriptions|default:"-"|intcomma }} 円</td></tr>
+        <tr>
+          <td>サブスク <a href="{% url 'fixedcosts:subscription_list' %}" class="badge bg-secondary text-decoration-none ms-1">内訳</a></td>
+          <td class="text-end">{{ subscription_total|intcomma }} 円</td>
+        </tr>
         <tr class="table-secondary">
           <td class="fw-bold">合計</td>
           <td class="text-end fw-bold">{{ total_cost|intcomma }} 円</td>

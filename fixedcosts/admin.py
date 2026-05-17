@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import FixedCost
+from .models import FixedCost, Subscription
 
 
 @admin.register(FixedCost)
@@ -12,7 +12,6 @@ class FixedCostAdmin(admin.ModelAdmin):
         "electricity",
         "gas",
         "internet",
-        "subscriptions",
         "get_total_cost",
     )
     list_filter = ("year", "month")
@@ -23,3 +22,9 @@ class FixedCostAdmin(admin.ModelAdmin):
         return obj.get_total_cost()
 
     get_total_cost.short_description = "合計金額"
+
+
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ("name", "amount", "start_year", "start_month", "end_year", "end_month")
+    ordering = ("start_year", "start_month", "name")

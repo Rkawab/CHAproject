@@ -6,7 +6,7 @@ from django.urls import reverse
 from variablecosts.models import VariableCost
 from django.db.models import Sum
 from .models import Budget, CreditCard, PaymentItem
-from fixedcosts.models import FixedCost
+from fixedcosts.models import FixedCost, Subscription
 from .forms import BudgetForm, CreditCardForm, PaymentItemForm
 from django.db.models.functions import TruncMonth
 from datetime import date
@@ -75,7 +75,6 @@ def home(request):
             "electricity": "電気代",
             "gas": "ガス代",
             "internet": "ネット代",
-            "subscriptions": "サブスク代",
             "water": "水道代",  # 注意：adjustedの判定にも使う
         }
 
@@ -92,16 +91,19 @@ def home(request):
 
         for attr, label in items.items():
             value = getattr(fixed_cost, attr)
-            if value in (0, None):  # 0かNoneの場合
+            if value in (0, None):
                 if not (attr == "water" and adjusted_water != 0):
                     missing_fixed_items.append(label)
+
+        # サブスクはSubscriptionテーブルから集計
+        subscription_total = Subscription.total_for_month(year, month)
 
         total_fixed_cost = (
             (fixed_cost.rent or 0)
             + (fixed_cost.electricity or 0)
             + (fixed_cost.gas or 0)
             + (fixed_cost.internet or 0)
-            + (fixed_cost.subscriptions or 0)
+            + subscription_total
             + (adjusted_water // 2)  # 水道代は半額
         )
         total_amount = total_variable_cost + total_fixed_cost

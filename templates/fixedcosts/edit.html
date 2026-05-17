@@ -73,11 +73,9 @@
                         <button type="button" class="btn btn-outline-secondary calc-btn" data-target="{{ form.internet.id_for_label }}">電卓</button>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <label for="{{ form.subscriptions.id_for_label }}" class="form-label">{{ form.subscriptions.label }}</label>
-                    <div class="input-group">
-                        {% render_field form.subscriptions class="form-control calc-target" %}
-                        <button type="button" class="btn btn-outline-secondary calc-btn" data-target="{{ form.subscriptions.id_for_label }}">電卓</button>
+                <div class="col-md-6 d-flex align-items-end">
+                    <div class="alert alert-info mb-0 w-100 py-2">
+                        サブスク代は <a href="{% url 'fixedcosts:subscription_list' %}">サブスク設定</a> から管理してください。
                     </div>
                 </div>
             </div>

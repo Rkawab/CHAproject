@@ -2,8 +2,8 @@ from datetime import date
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import FixedCost
-from .forms import FixedCostForm
+from .models import FixedCost, Subscription
+from .forms import FixedCostForm, SubscriptionForm
 from django.utils import timezone
 from core.utils import build_available_months
 
@@ -92,6 +92,9 @@ def fixedcosts_list(request, year=None, month=None):
             if prev_month_fc and prev_month_fc.water is not None:
                 adjusted_water = prev_month_fc.water // 2
 
+        # サブスク集計（Subscriptionテーブルから対象年月の合計）
+        subscription_total = Subscription.total_for_month(year, month)
+
         # 合計の再計算（adjusted_water を使う）
         total_cost = sum(
             filter(
@@ -102,7 +105,7 @@ def fixedcosts_list(request, year=None, month=None):
                     fixed_cost.electricity,
                     fixed_cost.gas,
                     fixed_cost.internet,
-                    fixed_cost.subscriptions,
+                    subscription_total or None,
                 ],
             )
         )
@@ -113,7 +116,7 @@ def fixedcosts_list(request, year=None, month=None):
             ("電気代", fixed_cost.electricity, ""),
             ("ネット代", fixed_cost.internet, ""),
             ("水道代", adjusted_water, ""),
-            ("サブスク代", fixed_cost.subscriptions, ""),
+            ("サブスク代", subscription_total if subscription_total else None, ""),
         ]
 
         # 円グラフ用のデータを作成（家賃と0円の項目は除外）
@@ -137,8 +140,9 @@ def fixedcosts_list(request, year=None, month=None):
             "total_cost": total_cost,
             "adjusted_water": adjusted_water,
             "items": items,
-            "cost_item_totals": chart_data,  # 変動費と同じ変数名で円グラフを表示
+            "cost_item_totals": chart_data,
             "available_months": available_months,
+            "subscription_total": subscription_total if fixed_cost else Subscription.total_for_month(year, month),
         },
     )
 
@@ -191,7 +195,6 @@ def fixedcosts_delete(request, year, month):
         "電気代": fixed_cost.electricity,
         "ガス代": fixed_cost.gas,
         "ネット代": fixed_cost.internet,
-        "サブスク代": fixed_cost.subscriptions,
     }
 
     if request.method == "POST":
@@ -217,3 +220,46 @@ def fixedcosts_delete(request, year, month):
             "cost_items": cost_items,
         },
     )
+
+
+# --- Subscription CRUD ---
+
+@login_required
+def subscription_list(request):
+    """サブスク一覧"""
+    subscriptions = Subscription.objects.all()
+    return render(request, "fixedcosts/subscription_list.html", {"subscriptions": subscriptions})
+
+
+@login_required
+def subscription_create(request):
+    """サブスク新規追加"""
+    form = SubscriptionForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "サブスクを追加しました。")
+        return redirect("fixedcosts:subscription_list")
+    return render(request, "fixedcosts/subscription_form.html", {"form": form, "is_new": True})
+
+
+@login_required
+def subscription_edit(request, pk):
+    """サブスク編集"""
+    subscription = get_object_or_404(Subscription, pk=pk)
+    form = SubscriptionForm(request.POST or None, instance=subscription)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "サブスクを更新しました。")
+        return redirect("fixedcosts:subscription_list")
+    return render(request, "fixedcosts/subscription_form.html", {"form": form, "is_new": False, "subscription": subscription})
+
+
+@login_required
+def subscription_delete(request, pk):
+    """サブスク削除"""
+    subscription = get_object_or_404(Subscription, pk=pk)
+    if request.method == "POST":
+        subscription.delete()
+        messages.success(request, f"「{subscription.name}」を削除しました。")
+        return redirect("fixedcosts:subscription_list")
+    return render(request, "fixedcosts/subscription_delete.html", {"subscription": subscription})
