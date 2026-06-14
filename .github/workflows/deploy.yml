@@ -12,14 +12,20 @@ jobs:
       - name: Pull latest code
         working-directory: /opt/CHAproject
         run: |
+          cp -f requirements.txt /tmp/req_cha_before.txt 2>/dev/null || true
           git fetch origin main
           git reset --hard origin/main
 
-      - name: Install dependencies
+      - name: Install dependencies (only if requirements changed)
         working-directory: /opt/CHAproject
         run: |
-          source venv/bin/activate
-          pip install -r requirements.txt
+          if cmp -s requirements.txt /tmp/req_cha_before.txt; then
+            echo "requirements.txt unchanged -> skip pip install"
+          else
+            echo "requirements.txt changed -> pip install"
+            source venv/bin/activate
+            pip install -r requirements.txt
+          fi
 
       - name: Django migrate & collectstatic
         working-directory: /opt/CHAproject
@@ -28,5 +34,5 @@ jobs:
           python manage.py migrate --noinput
           python manage.py collectstatic --noinput
 
-      - name: Restart Gunicorn
+      - name: Reload Gunicorn
         run: sudo systemctl reload chaproject
