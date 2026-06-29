@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% block title %}
+  {% if is_new %}年間情報の追加{% else %}年間情報の編集{% endif %} - {{ payer.name }}
+{% endblock %}
+{% block content %}
+
+<h2 class="my-3">{{ payer.name }} の年間情報を{% if is_new %}追加{% else %}編集{% endif %}（{{ year }}年）</h2>
+
+<form method="post" class="needs-validation" novalidate>
+  {% csrf_token %}
+  <input type="hidden" name="return_month" value="{{ return_month }}">
+
+  <div class="row mb-3">
+    <div class="col-6 col-md-3">
+      {% include "includes/bootstrap_field.html" with field=form.year %}
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label for="{{ form.summer_bonus.id_for_label }}" class="form-label fw-bold text-success">{{ form.summer_bonus.label }}</label>
+    <div class="input-group">
+      {% render_field form.summer_bonus class="form-control" %}
+      <button type="button" class="btn btn-outline-secondary" onclick="openCalculator('id_summer_bonus')">電卓</button>
+    </div>
+    {% if form.summer_bonus.errors %}
+      <div class="text-danger small">{{ form.summer_bonus.errors }}</div>
+    {% endif %}
+  </div>
+
+  <div class="mb-3">
+    <label for="{{ form.winter_bonus.id_for_label }}" class="form-label fw-bold text-success">{{ form.winter_bonus.label }}</label>
+    <div class="input-group">
+      {% render_field form.winter_bonus class="form-control" %}
+      <button type="button" class="btn btn-outline-secondary" onclick="openCalculator('id_winter_bonus')">電卓</button>
+    </div>
+    {% if form.winter_bonus.errors %}
+      <div class="text-danger small">{{ form.winter_bonus.errors }}</div>
+    {% endif %}
+  </div>
+
+  <button type="submit" class="btn btn-outline-primary">保存</button>
+  <a href="{% url 'privatecosts:detail_by_month' payer.name year return_month %}" class="btn btn-outline-secondary">キャンセル</a>
+</form>
+
+{% include "includes/calculator_modal.html" %}
+
+{% endblock %}

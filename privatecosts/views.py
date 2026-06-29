@@ -1,4 +1,5 @@
 import datetime
+import json
 from datetime import timedelta
 from calendar import monthrange
 from django.http import JsonResponse
@@ -7,14 +8,105 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Count, Sum, Min, Max
+from django.db.models.functions import TruncMonth
 from django.views.decorators.http import require_POST
 from core.models import Payer, CostItem
 from core.utils import sort_cost_items_with_other_last, build_available_months
 from core.receipt_reader import ReceiptReadError, extract_receipt_info
 from fixedcosts.models import FixedCost
 from variablecosts.models import VariableCost
-from .models import PrivateVariableCost, PrivateFixedCost
-from .forms import PrivateVariableCostForm, PrivateFixedCostForm
+from largecosts.models import LargeCost
+from .models import (
+    PrivateVariableCost,
+    PrivateFixedCost,
+    PrivateAnnualInfo,
+    PrivateSubscription,
+)
+from .forms import (
+    PrivateVariableCostForm,
+    PrivateFixedCostForm,
+    PrivateAnnualInfoForm,
+    PrivateSubscriptionForm,
+)
+
+
+def _shift_year_month(year, month, offset):
+    idx = year * 12 + (month - 1) + offset
+    return idx // 12, idx % 12 + 1
+
+
+def _month_key(year, month):
+    return f"{year:04d}-{month:02d}"
+
+
+def _household_shared_cost_map(months, start_date, end_date):
+    month_keys = {_month_key(y, m) for y, m in months}
+    min_year = months[0][0]
+    max_year = months[-1][0]
+
+    fixed_map = {}
+    for fixed_cost in FixedCost.objects.filter(year__gte=min_year, year__lte=max_year):
+        key = _month_key(fixed_cost.year, fixed_cost.month)
+        if key in month_keys:
+            fixed_map[key] = fixed_map.get(key, 0) + int(
+                fixed_cost.get_total_cost() or 0
+            )
+
+    variable_qs = (
+        VariableCost.objects.filter(
+            purchase_date__gte=start_date,
+            purchase_date__lt=end_date,
+        )
+        .annotate(mon=TruncMonth("purchase_date"))
+        .values("mon")
+        .annotate(total=Sum("amount"))
+    )
+    variable_map = {
+        _month_key(rec["mon"].year, rec["mon"].month): int(rec["total"] or 0)
+        for rec in variable_qs
+    }
+
+    return {
+        key: (fixed_map.get(key, 0) + variable_map.get(key, 0)) // 2
+        for key in month_keys
+    }
+
+
+def _large_shared_cost_map(months, start_date, end_date):
+    month_keys = {_month_key(y, m) for y, m in months}
+    large_qs = (
+        LargeCost.objects.filter(
+            purchase_date__gte=start_date,
+            purchase_date__lt=end_date,
+        )
+        .annotate(mon=TruncMonth("purchase_date"))
+        .values("mon")
+        .annotate(total=Sum("amount"))
+    )
+    large_map = {
+        _month_key(rec["mon"].year, rec["mon"].month): int(rec["total"] or 0)
+        for rec in large_qs
+    }
+    return {key: large_map.get(key, 0) // 2 for key in month_keys}
+
+
+def _safe_month(value, fallback):
+    try:
+        month = int(value)
+    except (TypeError, ValueError):
+        return fallback
+    if 1 <= month <= 12:
+        return month
+    return fallback
+
+
+def _private_subscription_map(user, labels):
+    """ラベル一覧に対する使用者別サブスク合計を返す"""
+    result = {}
+    for label in labels:
+        year, month = [int(part) for part in label.split("-")]
+        result[label] = PrivateSubscription.total_for_month(user, year, month)
+    return result
 
 
 @login_required
@@ -64,7 +156,7 @@ def privatecosts_detail(request, payer_name, year=None, month=None):
     # 収支計算: 給与収入 - 差引控除額 - (折半費 + サブスク + 変動費合計)
     salary = (fixed_cost.salary or 0) if fixed_cost else 0
     deduction = (fixed_cost.deduction or 0) if fixed_cost else 0
-    subscriptions = (fixed_cost.subscriptions or 0) if fixed_cost else 0
+    subscriptions = PrivateSubscription.total_for_month(payer, year, month)
     savings = (fixed_cost.savings or 0) if fixed_cost else 0
 
     # 夫婦折半費用：当月の家計合計（固定費＋変動費）の1/2を自動計算
@@ -80,8 +172,128 @@ def privatecosts_detail(request, payer_name, year=None, month=None):
         or 0
     )
     shared_cost = (household_fixed_total + household_variable_total) // 2
+    large_shared_cost = (
+        LargeCost.objects.filter(
+            purchase_date__range=(start_date, end_date)
+        ).aggregate(total=Sum("amount"))["total"]
+        or 0
+    ) // 2
 
-    balance = salary - deduction - shared_cost - subscriptions - savings - variable_total
+    balance = (
+        salary
+        - deduction
+        - shared_cost
+        - large_shared_cost
+        - subscriptions
+        - savings
+        - variable_total
+    )
+
+    # summaryページ風の直近12ヶ月グラフ用データ（表示月を終点にする）
+    chart_months = [_shift_year_month(year, month, i) for i in range(-11, 1)]
+    chart_labels = [_month_key(y, m) for y, m in chart_months]
+    chart_start_date = datetime.date(chart_months[0][0], chart_months[0][1], 1)
+    chart_end_year, chart_end_month = _shift_year_month(
+        chart_months[-1][0], chart_months[-1][1], 1
+    )
+    chart_end_date = datetime.date(chart_end_year, chart_end_month, 1)
+
+    chart_variable_qs = (
+        PrivateVariableCost.objects.filter(
+            user=payer,
+            purchase_date__gte=chart_start_date,
+            purchase_date__lt=chart_end_date,
+        )
+        .annotate(mon=TruncMonth("purchase_date"))
+        .values("mon")
+        .annotate(total=Sum("amount"))
+    )
+    chart_variable_map = {
+        _month_key(rec["mon"].year, rec["mon"].month): int(rec["total"] or 0)
+        for rec in chart_variable_qs
+    }
+
+    chart_deduction_map = {}
+    chart_savings_map = {}
+    chart_min_year = chart_months[0][0]
+    chart_max_year = chart_months[-1][0]
+    for row in PrivateFixedCost.objects.filter(
+        user=payer, year__gte=chart_min_year, year__lte=chart_max_year
+    ):
+        key = _month_key(row.year, row.month)
+        if key in chart_labels:
+            chart_deduction_map[key] = chart_deduction_map.get(key, 0) + int(
+                row.deduction or 0
+            )
+            chart_savings_map[key] = chart_savings_map.get(key, 0) + int(
+                row.savings or 0
+            )
+
+    chart_shared_map = _household_shared_cost_map(
+        chart_months, chart_start_date, chart_end_date
+    )
+    chart_large_shared_map = _large_shared_cost_map(
+        chart_months, chart_start_date, chart_end_date
+    )
+    deduction_series = [chart_deduction_map.get(label, 0) for label in chart_labels]
+    shared_series = [chart_shared_map.get(label, 0) for label in chart_labels]
+    large_shared_series = [
+        chart_large_shared_map.get(label, 0) for label in chart_labels
+    ]
+    chart_subscription_map = _private_subscription_map(payer, chart_labels)
+    subscription_series = [
+        chart_subscription_map.get(label, 0) for label in chart_labels
+    ]
+    savings_series = [chart_savings_map.get(label, 0) for label in chart_labels]
+    private_variable_series = [
+        chart_variable_map.get(label, 0) for label in chart_labels
+    ]
+
+    # 表示年の年間情報・年間収支
+    annual_info = PrivateAnnualInfo.objects.filter(user=payer, year=year).first()
+    annual_summer_bonus = (annual_info.summer_bonus or 0) if annual_info else 0
+    annual_winter_bonus = (annual_info.winter_bonus or 0) if annual_info else 0
+    annual_bonus_total = annual_summer_bonus + annual_winter_bonus
+    annual_fixed_rows = PrivateFixedCost.objects.filter(user=payer, year=year)
+    annual_salary = sum(int(row.salary or 0) for row in annual_fixed_rows)
+    annual_deduction = sum(int(row.deduction or 0) for row in annual_fixed_rows)
+    annual_savings = sum(int(row.savings or 0) for row in annual_fixed_rows)
+    annual_subscriptions = sum(
+        PrivateSubscription.total_for_month(payer, year, month_value)
+        for month_value in range(1, 13)
+    )
+    annual_variable_total = (
+        PrivateVariableCost.objects.filter(
+            user=payer,
+            purchase_date__gte=datetime.date(year, 1, 1),
+            purchase_date__lt=datetime.date(year + 1, 1, 1),
+        ).aggregate(total=Sum("amount"))["total"]
+        or 0
+    )
+    annual_months = [(year, m) for m in range(1, 13)]
+    annual_shared_cost = sum(
+        _household_shared_cost_map(
+            annual_months,
+            datetime.date(year, 1, 1),
+            datetime.date(year + 1, 1, 1),
+        ).values()
+    )
+    annual_large_shared_cost = sum(
+        _large_shared_cost_map(
+            annual_months,
+            datetime.date(year, 1, 1),
+            datetime.date(year + 1, 1, 1),
+        ).values()
+    )
+    annual_expense_total = (
+        annual_deduction
+        + annual_shared_cost
+        + annual_large_shared_cost
+        + annual_subscriptions
+        + annual_savings
+        + annual_variable_total
+    )
+    annual_balance = annual_salary + annual_bonus_total - annual_expense_total
 
     # ナビゲーション用の前月・次月
     prev_month_date = (start_date - timedelta(days=1)).replace(day=1)
@@ -115,9 +327,31 @@ def privatecosts_detail(request, payer_name, year=None, month=None):
             "salary": salary,
             "deduction": deduction,
             "shared_cost": shared_cost,
+            "large_shared_cost": large_shared_cost,
             "subscriptions": subscriptions,
             "savings": savings,
             "balance": balance,
+            "annual_info": annual_info,
+            "annual_summer_bonus": annual_summer_bonus,
+            "annual_winter_bonus": annual_winter_bonus,
+            "annual_bonus_total": annual_bonus_total,
+            "annual_salary": annual_salary,
+            "annual_deduction": annual_deduction,
+            "annual_shared_cost": annual_shared_cost,
+            "annual_large_shared_cost": annual_large_shared_cost,
+            "annual_subscriptions": annual_subscriptions,
+            "annual_savings": annual_savings,
+            "annual_variable_total": annual_variable_total,
+            "annual_expense_total": annual_expense_total,
+            "annual_balance": annual_balance,
+            "monthly_expense_labels": json.dumps(chart_labels),
+            "monthly_deduction_series": json.dumps(deduction_series),
+            "monthly_shared_series": json.dumps(shared_series),
+            "monthly_large_shared_series": json.dumps(large_shared_series),
+            "monthly_subscription_series": json.dumps(subscription_series),
+            "monthly_savings_series": json.dumps(savings_series),
+            "monthly_variable_series": json.dumps(private_variable_series),
+            "monthly_expense_chart_year": year,
             "prev_month": prev_month_date,
             "next_month": next_month_obj,
             "available_months": available_months,
@@ -224,6 +458,118 @@ def private_fixed_edit(request, payer_name, year=None, month=None):
             "month": month,
             "is_new": not fixed_cost.pk,
         },
+    )
+
+
+@login_required
+def private_annual_edit(request, payer_name, year):
+    """個人年間情報の追加・編集"""
+    payer = get_object_or_404(Payer, name=payer_name)
+    today = timezone.localdate()
+    return_month = _safe_month(
+        request.POST.get("return_month") or request.GET.get("month"),
+        today.month,
+    )
+
+    try:
+        annual_info = PrivateAnnualInfo.objects.get(user=payer, year=year)
+    except PrivateAnnualInfo.DoesNotExist:
+        annual_info = PrivateAnnualInfo(user=payer, year=year)
+
+    if request.method == "POST":
+        form = PrivateAnnualInfoForm(request.POST, instance=annual_info, payer=payer)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.user = payer
+            obj.save()
+            messages.success(request, f"{obj.year}年の年間情報を保存しました。")
+            return redirect(
+                "privatecosts:detail_by_month",
+                payer_name=payer_name,
+                year=obj.year,
+                month=return_month,
+            )
+    else:
+        form = PrivateAnnualInfoForm(instance=annual_info, payer=payer)
+
+    return render(
+        request,
+        "privatecosts/annual_form.html",
+        {
+            "form": form,
+            "payer": payer,
+            "year": year,
+            "return_month": return_month,
+            "is_new": not annual_info.pk,
+        },
+    )
+
+
+@login_required
+def subscription_list(request, payer_name):
+    """個人用サブスク一覧"""
+    payer = get_object_or_404(Payer, name=payer_name)
+    subscriptions = PrivateSubscription.objects.filter(user=payer)
+    return render(
+        request,
+        "privatecosts/subscription_list.html",
+        {"payer": payer, "subscriptions": subscriptions},
+    )
+
+
+@login_required
+def subscription_create(request, payer_name):
+    """個人用サブスク新規追加"""
+    payer = get_object_or_404(Payer, name=payer_name)
+    form = PrivateSubscriptionForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        subscription = form.save(commit=False)
+        subscription.user = payer
+        subscription.save()
+        messages.success(request, "サブスクを追加しました。")
+        return redirect("privatecosts:subscription_list", payer_name=payer_name)
+    return render(
+        request,
+        "privatecosts/subscription_form.html",
+        {"form": form, "payer": payer, "is_new": True},
+    )
+
+
+@login_required
+def subscription_edit(request, payer_name, pk):
+    """個人用サブスク編集"""
+    payer = get_object_or_404(Payer, name=payer_name)
+    subscription = get_object_or_404(PrivateSubscription, pk=pk, user=payer)
+    form = PrivateSubscriptionForm(request.POST or None, instance=subscription)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "サブスクを更新しました。")
+        return redirect("privatecosts:subscription_list", payer_name=payer_name)
+    return render(
+        request,
+        "privatecosts/subscription_form.html",
+        {
+            "form": form,
+            "payer": payer,
+            "is_new": False,
+            "subscription": subscription,
+        },
+    )
+
+
+@login_required
+def subscription_delete(request, payer_name, pk):
+    """個人用サブスク削除"""
+    payer = get_object_or_404(Payer, name=payer_name)
+    subscription = get_object_or_404(PrivateSubscription, pk=pk, user=payer)
+    if request.method == "POST":
+        subscription.delete()
+        messages.success(request, f"「{subscription.name}」を削除しました。")
+        return redirect("privatecosts:subscription_list", payer_name=payer_name)
+    return render(
+        request,
+        "privatecosts/subscription_delete.html",
+        {"subscription": subscription, "payer": payer},
     )
 
 

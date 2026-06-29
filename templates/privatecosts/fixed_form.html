@@ -48,15 +48,13 @@
   </div>
 
   <!-- サブスク代 -->
-  <div class="mb-3">
-    <label for="{{ form.subscriptions.id_for_label }}" class="form-label">{{ form.subscriptions.label }}</label>
-    <div class="input-group">
-      {% render_field form.subscriptions class="form-control" %}
-      <button type="button" class="btn btn-outline-secondary" onclick="openCalculator('id_subscriptions')">電卓</button>
+  <div class="alert alert-info">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <span>サブスク代はサブスク管理から登録してください。</span>
+      <a href="{% url 'privatecosts:subscription_list' payer.name %}" class="btn btn-outline-warning btn-sm">
+        サブスク管理
+      </a>
     </div>
-    {% if form.subscriptions.errors %}
-      <div class="text-danger small">{{ form.subscriptions.errors }}</div>
-    {% endif %}
   </div>
 
   <!-- 積立費用 -->

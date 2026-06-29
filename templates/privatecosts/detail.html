@@ -50,6 +50,10 @@
           <td class="text-end text-muted">- {{ shared_cost|intcomma }} 円</td>
         </tr>
         <tr>
+          <td class="text-muted">大型費用折半</td>
+          <td class="text-end text-muted">- {{ large_shared_cost|intcomma }} 円</td>
+        </tr>
+        <tr>
           <td class="text-muted">サブスク代</td>
           <td class="text-end text-muted">- {{ subscriptions|intcomma }} 円</td>
         </tr>
@@ -66,6 +70,59 @@
     <p class="fs-4 fw-bold mb-0 {% if balance >= 0 %}text-success{% else %}text-danger{% endif %}">
       収支：{% if balance >= 0 %}+{% endif %}{{ balance|intcomma }} 円
     </p>
+  </div>
+</div>
+
+<!-- 年間情報カード -->
+<div class="card mb-4 shadow-sm">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+      <h5 class="card-title mb-0">{{ year }}年の年間情報</h5>
+      <a href="{% url 'privatecosts:annual_edit' payer.name year %}?month={{ month }}" class="btn btn-sm btn-outline-success">編集</a>
+    </div>
+    {% if not annual_info %}
+      <p class="text-muted small mb-2">この年の年間情報はまだ入力されていません。</p>
+    {% endif %}
+    <table class="table table-sm mb-2">
+      <tbody>
+        <tr>
+          <td class="text-success fw-bold">年間給与収入</td>
+          <td class="text-end text-success fw-bold">+ {{ annual_salary|intcomma }} 円</td>
+        </tr>
+        <tr>
+          <td class="text-success fw-bold">夏季賞与</td>
+          <td class="text-end text-success fw-bold">+ {{ annual_summer_bonus|intcomma }} 円</td>
+        </tr>
+        <tr>
+          <td class="text-success fw-bold">冬季賞与</td>
+          <td class="text-end text-success fw-bold">+ {{ annual_winter_bonus|intcomma }} 円</td>
+        </tr>
+        <tr>
+          <td class="text-success fw-bold">賞与合計</td>
+          <td class="text-end text-success fw-bold">+ {{ annual_bonus_total|intcomma }} 円</td>
+        </tr>
+        <tr>
+          <td class="text-muted">年間出費合計</td>
+          <td class="text-end text-muted">- {{ annual_expense_total|intcomma }} 円</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="fs-5 fw-bold mb-0 {% if annual_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+      年間収支：{% if annual_balance >= 0 %}+{% endif %}{{ annual_balance|intcomma }} 円
+    </p>
+  </div>
+</div>
+
+<!-- 月ごとの出費グラフ -->
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h5 class="card-title mb-3">月ごとの出費</h5>
+    <div class="chart-wrapper chart-wrapper--bar" style="position: relative; height: 340px;">
+      <canvas id="monthlyExpenseBar"></canvas>
+    </div>
+  </div>
+  <div class="card-footer text-muted small">
+    表示月までの直近12ヶ月の個人出費を表示します。
   </div>
 </div>
 
@@ -160,6 +217,106 @@
     </tbody>
   </table>
 </div>
+
+<script>
+  const monthlyExpenseLabels = {{ monthly_expense_labels|safe }};
+  const monthlyDeductionSeries = {{ monthly_deduction_series|safe }};
+  const monthlySharedSeries = {{ monthly_shared_series|safe }};
+  const monthlyLargeSharedSeries = {{ monthly_large_shared_series|safe }};
+  const monthlySubscriptionSeries = {{ monthly_subscription_series|safe }};
+  const monthlySavingsSeries = {{ monthly_savings_series|safe }};
+  const monthlyVariableSeries = {{ monthly_variable_series|safe }};
+  const monthlyExpenseChartYear = {{ monthly_expense_chart_year }};
+  const monthlyExpenseCtx = document.getElementById('monthlyExpenseBar').getContext('2d');
+
+  function toMonthlyDisplayLabel(label) {
+    const [yStr, mStr] = label.split("-");
+    const y = parseInt(yStr, 10);
+    const m = parseInt(mStr, 10);
+    if (y === monthlyExpenseChartYear) {
+      return String(m);
+    }
+    return "'" + m;
+  }
+
+  new Chart(monthlyExpenseCtx, {
+    type: 'bar',
+    data: {
+      labels: monthlyExpenseLabels.map(toMonthlyDisplayLabel),
+      datasets: [
+        {
+          label: '差引控除額',
+          data: monthlyDeductionSeries,
+          backgroundColor: '#7F7F7F',
+          stack: 'privateExpenseStack'
+        },
+        {
+          label: '夫婦折半費用',
+          data: monthlySharedSeries,
+          backgroundColor: '#4E79A7',
+          stack: 'privateExpenseStack'
+        },
+        {
+          label: '大型費用折半',
+          data: monthlyLargeSharedSeries,
+          backgroundColor: '#D93F3C',
+          stack: 'privateExpenseStack'
+        },
+        {
+          label: 'サブスク代',
+          data: monthlySubscriptionSeries,
+          backgroundColor: '#F28E2B',
+          stack: 'privateExpenseStack'
+        },
+        {
+          label: '積立費用',
+          data: monthlySavingsSeries,
+          backgroundColor: '#59A14F',
+          stack: 'privateExpenseStack'
+        },
+        {
+          label: '変動費',
+          data: monthlyVariableSeries,
+          backgroundColor: '#9C6ACF',
+          stack: 'privateExpenseStack'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              const value = ctx.parsed.y || 0;
+              return `${ctx.dataset.label}: ${value.toLocaleString()} 円`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          ticks: {
+            autoSkip: false,
+            maxRotation: 0,
+            minRotation: 0,
+          }
+        },
+        y: {
+          stacked: true,
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) { return value.toLocaleString() + ' 円'; }
+          }
+        }
+      }
+    }
+  });
+</script>
 
 {% if cost_item_totals %}
 <script>

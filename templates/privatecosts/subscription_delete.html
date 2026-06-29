@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block content %}
+
+<h2 class="my-3 text-danger">削除確認</h2>
+
+<p>以下のサブスクを本当に削除しますか？</p>
+
+<div class="card mb-4 shadow-sm">
+  <div class="card-body">
+    <ul class="list-unstyled mb-0">
+      <li><strong>使用者：</strong>{{ payer.name }}</li>
+      <li><strong>内容：</strong>{{ subscription.name }}</li>
+      <li><strong>金額：</strong>{{ subscription.amount|intcomma }} 円/月</li>
+      <li><strong>開始：</strong>{{ subscription.start_year }}年{{ subscription.start_month }}月</li>
+      <li>
+        <strong>終了：</strong>
+        {% if subscription.end_year %}
+          {{ subscription.end_year }}年{{ subscription.end_month }}月
+        {% else %}
+          継続中（無期限）
+        {% endif %}
+      </li>
+    </ul>
+  </div>
+</div>
+
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-danger">削除する</button>
+  <a href="{% url 'privatecosts:subscription_list' payer.name %}" class="btn btn-outline-secondary ms-2">キャンセル</a>
+</form>
+
+{% endblock %}

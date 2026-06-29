@@ -41,6 +41,33 @@ urlpatterns = [
         views.scan_receipt,
         name="scan_receipt",
     ),
+    # 年間情報
+    path(
+        "<str:payer_name>/annual/edit/<int:year>/",
+        views.private_annual_edit,
+        name="annual_edit",
+    ),
+    # サブスク管理
+    path(
+        "<str:payer_name>/subscriptions/",
+        views.subscription_list,
+        name="subscription_list",
+    ),
+    path(
+        "<str:payer_name>/subscriptions/new/",
+        views.subscription_create,
+        name="subscription_create",
+    ),
+    path(
+        "<str:payer_name>/subscriptions/<int:pk>/edit/",
+        views.subscription_edit,
+        name="subscription_edit",
+    ),
+    path(
+        "<str:payer_name>/subscriptions/<int:pk>/delete/",
+        views.subscription_delete,
+        name="subscription_delete",
+    ),
     # 固定費 CRUD
     path(
         "<str:payer_name>/fixed/edit/",
